@@ -103,9 +103,9 @@ db_tmp_fname = db_fname + '.tmp.db'
 if os.path.exists(db_tmp_fname): os.unlink(db_tmp_fname)
 conn = sqlite3.connect(db_tmp_fname)
 with conn: # this commits insertions
-    conn.execute('create table pheno (id INTEGER PRIMARY KEY, phecode VARCHAR, phenostring VARCHAR, category VARCHAR, num_cases INTEGER, num_controls INTEGER, phecode_exclude_range VARCHAR, phecode_exclude_description VARCHAR, sex VARCHAR)')
-    conn.execute('create table gene (id INTEGER PRIMARY KEY, name VARCHAR, chrom VARCHAR)')
-    conn.execute('create table assoc (id INTEGER PRIMARY KEY, pheno_id INTEGER, gene_id INTEGER, pval REAL, startpos INTEGER, endpos INT, num_rare INTEGER, mac_case REAL, mac_control REAL, FOREIGN KEY(pheno_id) REFERENCES pheno(id), FOREIGN KEY(gene_id) REFERENCES gene(id))')
+    conn.execute('create table pheno (id INT PRIMARY KEY, phecode TEXT, phenostring TEXT, category TEXT, num_cases INT, num_controls INT, phecode_exclude_range TEXT, phecode_exclude_description TEXT, sex TEXT)')
+    conn.execute('create table gene (id INT PRIMARY KEY, name TEXT, chrom TEXT)')
+    conn.execute('create table assoc (id INT PRIMARY KEY, pheno_id INT, gene_id INT, pval REAL, startpos INT, endpos INT, num_rare INT, mac_case REAL, mac_control REAL, FOREIGN KEY(pheno_id) REFERENCES pheno(id), FOREIGN KEY(gene_id) REFERENCES gene(id))')
 
     conn.executemany('INSERT INTO pheno VALUES (?,?,?,?,?,?,?,?,?)', pheno_row_generator())
     conn.executemany('INSERT INTO gene VALUES (?,?,?)', gene_row_generator())
