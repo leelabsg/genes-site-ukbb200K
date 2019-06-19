@@ -22,7 +22,7 @@ $.getJSON('/api/gene/'+model.genename).then(function(resp) {
         dashboard: {components: [ {type: 'download', position: 'right', color: 'gray' } ]},
         panels: [
             LocusZoom.Layouts.get('panel', 'phewas', {
-                margin: {top: 5, right: 5, bottom: 80, left: 50 }
+                margin: {top: 5, right: 5, bottom: 120, left: 50 }
             })
         ],
     }
