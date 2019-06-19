@@ -53,7 +53,7 @@ def get_genes_variantdata():
                 variant_data = json.dumps(df, separators=(',',':')).encode('utf8')
                 yield (phecode, genename, chrom, variant_data)
 
-samples = [variant_data for phecode,genename,chrom,variant_data in itertools.islice(get_genes_variantdata(), 0, 18700*2)] # ~2 phenos
+samples = [variant_data for phecode,genename,chrom,variant_data in itertools.islice(get_genes_variantdata(), 0, 18700*4)] # ~4 phenos
 # similar to `zstd --train variant-zstd-training/* -o zstd-variant-dictionary`
 print('collected samples')
 zstd_dict = zstandard.train_dictionary(131072, samples) # docs use 131072 and `zstd --train` produced 112KB
@@ -62,7 +62,7 @@ print('trained zstd_dict')
 
 zstd_compressor = zstandard.ZstdCompressor(level=8, dict_data=zstd_dict) # level=8 is a decent middleground
 def variant_df_gen():
-    for phecode, genename, chrom, variant_data in itertools.islice(get_genes_variantdata(), 0, 18700*10):
+    for phecode, genename, chrom, variant_data in get_genes_variantdata():
         compressed_data = zstd_compressor.compress(variant_data)
         yield (phecode, genename, chrom, compressed_data)
 db_tmp_filepath = db_filepath + '.tmp.db'
