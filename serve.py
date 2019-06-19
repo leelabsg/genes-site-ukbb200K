@@ -86,16 +86,16 @@ def gene_api(genename):
                 'ORDER BY phecode', (gene_id,))
     return jsonify(dict(assocs=df))
 
-# @app.route('/api/pheno/<phecode>')
-# def pheno_api(phecode):
-#     matches = list(get_db().execute('SELECT id FROM pheno WHERE phecode=?', (phecode,)))
-#     if not matches: return abort(404)
-#     pheno_id = matches[0][0]
-#     df = get_df('SELECT name,category,genesettype,pval,selected_genes_comma FROM pheno_pathway_assoc LEFT JOIN pathway ON pheno_pathway_assoc.pathway_id=pathway.id WHERE pheno_id=?', (pheno_id,))
-#     for i in range(len(df['name'])):
-#         if not df['pval'][i] <= 1e-5:
-#             df['selected_genes_comma'][i] = ''
-#     return jsonify(dict(assocs=df))
+@app.route('/api/pheno/<phecode>')
+def pheno_api(phecode):
+    matches = list(get_db().execute('SELECT id FROM pheno WHERE phecode=?', (phecode,)))
+    if not matches: return abort(404)
+    pheno_id = matches[0][0]
+    df = get_df('SELECT name,pval,start,end,num_rare,mac_case,mac_control,num_cases,num_controls FROM assoc '
+                'LEFT JOIN gene ON assoc.gene_id=gene.id '
+                'WHERE pheno_id=? '
+                'ORDER BY pval LIMIT 1000', (pheno_id,))
+    return jsonify(dict(assocs=df))
 
 
 class Autocompleter:
