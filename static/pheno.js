@@ -49,7 +49,7 @@ $.getJSON('/api/pheno/'+model.phecode).then(function(resp) {
          "Case / Control MAC: <strong>{{phewas:mac_case}} / {{phewas:mac_control}}</strong><br>" +
          "Start - End: <strong>{{phewas:start}} - {{phewas:end}}</strong><br>"
         );
-    layout.panels[0].data_layers[1].behaviors.onclick = [{action: 'link', href: '/pathway_pheno_assoc/{{phewas:id}}/'+model.phecode}];
+    layout.panels[0].data_layers[1].behaviors.onclick = [{action: 'link', href: '/assoc/{{phewas:id}}/'+model.phecode}];
     layout.panels[0].data_layers[1].y_axis.min_extent = [0, significance_threshold*1.1];
 
     if (assocs.id.length <= 10) {
@@ -92,7 +92,7 @@ $.getJSON('/api/pheno/'+model.phecode).then(function(resp) {
             pagination: 'local',
             paginationSize: 15,
             columns: [
-                {title: 'Pathway', field:'name', formatter:'link', formatterParams: {url:function(cell){return '/pathway_pheno_assoc/'+cell.getValue()+'/'+model.phecode}}, headerFilter:true, widthGrow:3},
+                {title: 'Gene', field:'name', formatter:'link', formatterParams: {url:function(cell){return '/assoc/'+cell.getValue()+'/'+model.phecode}}, headerFilter:true, widthGrow:3},
                 {title: 'P-value', field:'pval'},
                 {title: '#Cases', field:'num_cases'},
                 {title: '#Controls', field:'num_controls'},
