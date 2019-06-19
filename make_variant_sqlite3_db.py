@@ -30,18 +30,19 @@ phecodes = [row[0] for row in sqlite3.connect('assoc.db').execute('SELECT phecod
 print(len(phecodes), 'phecodes')
 
 def get_genes_variantdata():
-    for phecode in phecodes:
+    for i,phecode in enumerate(phecodes):
+        print('  -', i, phecode)
         with gzip.open('input_data/variant/result_singlevariant_{}.txt.gz'.format(phecode), 'rt') as f:
             rows = csv.DictReader(f, delimiter=' ')
             for genename,rowgroup in itertools.groupby(rows, key=lambda r:r['GeneName']):
                 # we use pos_delta instead of `pos` to try to save space
                 rows = sorted(rowgroup, key=lambda r:int(r['SNP'].split(':',2)[1])) # sort by pos
                 df = {key:[] for key in 'pos_delta base maf mac_case mac_control pval'.split()}
+                chrom = rows[0]['SNP'].split(':')[0]
                 prev_pos = 0
-                for i,row in enumerate(rows):
+                for row in rows:
                     chrom_, pos_str, base = row['SNP'].split(':', 2)
-                    if i == 0: chrom = chrom_
-                    else: assert chrom == chrom_
+                    assert chrom_ == chrom
                     pos = int(pos_str); assert pos >= prev_pos, (pos, prev_pos)
                     df['pos_delta'].append(pos - prev_pos)
                     prev_pos = pos
