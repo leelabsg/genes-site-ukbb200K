@@ -55,24 +55,25 @@ def pheno_page(phecode):
     phenostring, category = matches[0][1:]
     return render_template('pheno.html', phecode=phecode, phenostring=phenostring, category=category)
 
-# @app.route('/pathway_pheno_assoc/<pathway_name>/<phecode>')
-# def pathway_pheno_assoc_page(pathway_name, phecode):
-#     matches = list(get_db().execute('SELECT id,phenostring,category FROM pheno WHERE phecode=?', (phecode,)))
-#     if not matches: return abort(404)
-#     pheno_id, phenostring, pheno_category = matches[0]
+@app.route('/assoc/<genename>/<phecode>')
+def assoc_page(genename, phecode):
+    matches = list(get_db().execute('SELECT id,phenostring,category FROM pheno WHERE phecode=?', (phecode,)))
+    if not matches: return abort(404)
+    pheno_id, phenostring, pheno_category = matches[0]
 
-#     matches = list(get_db().execute('SELECT id,url,category,genesettype,genes_comma FROM pathway WHERE name = ?', (pathway_name,)))
-#     if not matches: return abort(404)
-#     pathway_id, pathway_url, pathway_category, pathway_genesettype = matches[0][:-1]
-#     genes = matches[0][-1].split(',')
+    matches = list(get_db().execute('SELECT id  FROM gene WHERE name = ?', (genename,)))
+    if not matches: return abort(404)
+    gene_id = matches[0][0]
 
-#     matches = list(get_db().execute('SELECT pval,selected_genes_comma FROM pheno_pathway_assoc LEFT JOIN pathway ON pheno_pathway_assoc.pathway_id=pathway.id WHERE pheno_id=? AND pathway_id=?', (pheno_id, pathway_id)))
-#     if not matches: return abort(404)
-#     pval, selected_genes = matches[0][0], matches[0][1].split(',')
-#     return render_template('pathway_pheno_assoc.html',
-#                            phecode=phecode, phenostring=phenostring, pheno_category=pheno_category,
-#                            pathway_name=pathway_name, pathway_url=pathway_url, pathway_category=pathway_category, pathway_genesettype=pathway_genesettype,
-#                            pval=pval, genes=genes, selected_genes=selected_genes)
+    matches = list(get_db().execute('SELECT pval,num_rare, start,end, mac_case,mac_control,num_cases,num_controls FROM assoc '
+                                    'LEFT JOIN gene ON assoc.gene_id=gene.id '
+                                    'WHERE pheno_id=? AND gene_id=?', (pheno_id, gene_id)))
+    if not matches: return abort(404)
+    m = matches[0]
+    return render_template('assoc.html',
+                           phecode=phecode, phenostring=phenostring, pheno_category=pheno_category,
+                           genename=genename,
+                           pval=m[0],num_rare=m[1], start=m[2],end=m[3], mac_case=m[4],mac_control=m[5], num_cases=m[6],num_controls=m[7])
 
 
 @app.route('/api/gene/<genename>')

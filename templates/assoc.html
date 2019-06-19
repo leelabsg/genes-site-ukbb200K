@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+
+{% block in_head %}
+<script type="text/javascript">
+  window.model.phecode = {{ phecode|tojson(separators=(',',':'))|safe }};
+  window.model.genename = {{ genename|tojson(separators=(',',':'))|safe }};
+</script>
+
+<link href="https://unpkg.com/tabulator-tables@4.2.2/dist/css/bootstrap/tabulator_bootstrap.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.2.2/dist/js/tabulator.min.js"></script>
+{% endblock %}
+
+
+{% block contained %}
+<div class="row">
+    <div class="col-xs-12">
+        <h1 style="margin-top:0">{{ phecode }} + {{ genename }} </h1>
+        <p>
+          <a href="/pheno/{{ phecode }}" class="btn btn-primary">Go to pheno {{ phecode }}</a>
+          <a href="/gene/{{ genename }}" class="btn btn-primary">Go to gene {{ genename }}</a>
+        </p>
+        <p>pval: <i>{{ pval }}</i></p>
+        <p>Number of Rare Variants: <i>{{ num_rare }}</i></p>
+        <p>Start Position: <i>{{ start }}</i></p>
+        <p>End Position: <i>{{ end }}</i></p>
+        <p>Minor Allele Count in Cases: <i>{{ mac_case }}</i></p>
+        <p>Minor Allele Count in Controls: <i>{{ mac_control }}</i></p>
+        <p>Number of Cases: <i>{{ num_cases }}</i></p>
+        <p>Number of Controls: <i>{{ num_controls }}</i></p>
+    </div>
+</div>
+<div class="row">
+    <div class="col-xs-12">
+        <div id="table" class="table-striped table-bordered"></div>
+    </div>
+</div>
+{% endblock %}
