@@ -21,7 +21,7 @@ file size comparison:
   969_nochrom_posdelta_zstdicit_level19.db=8.7MB in 29s
 '''
 
-import sqlite3, gzip, csv, os, itertools, json, sys
+import sqlite3, gzip, csv, os, itertools, json
 import zstandard
 
 db_filepath = 'variant.db'
@@ -53,21 +53,27 @@ def get_genes_variantdata():
                 variant_data = json.dumps(df, separators=(',',':')).encode('utf8')
                 yield (phecode, genename, chrom, variant_data)
 
-samples = [variant_data for phecode,genename,chrom,variant_data in itertools.islice(get_genes_variantdata(), 0, 10000)]
+samples = [variant_data for phecode,genename,chrom,variant_data in itertools.islice(get_genes_variantdata(), 0, 18700*2)] # ~2 phenos
 # similar to `zstd --train variant-zstd-training/* -o zstd-variant-dictionary`
+print('collected samples')
 zstd_dict = zstandard.train_dictionary(131072, samples) # docs use 131072 and `zstd --train` produced 112KB
 #with open(zstd_dict_filepath, 'wb') as f: f.write(zstd_dict.as_bytes()) # usable by `zstd -D dict < text > compressed`
+print('trained zstd_dict')
 
 zstd_compressor = zstandard.ZstdCompressor(level=8, dict_data=zstd_dict) # level=8 is a decent middleground
 def variant_df_gen():
-    for phecode, genename, chrom, variant_data in itertools.islice(get_genes_variantdata(), 0, 10000):
+    for phecode, genename, chrom, variant_data in itertools.islice(get_genes_variantdata(), 0, 18700*10):
         compressed_data = zstd_compressor.compress(variant_data)
         yield (phecode, genename, chrom, compressed_data)
-if os.path.exists(db_filepath): os.unlink(db_filepath)
-conn = sqlite3.connect(db_filepath)
+db_tmp_filepath = db_filepath + '.tmp.db'
+if os.path.exists(db_tmp_filepath): os.unlink(db_tmp_filepath)
+conn = sqlite3.connect(db_tmp_filepath)
 with conn:
     conn.execute('CREATE TABLE compression_dict (id INTEGER PRIMARY KEY, data VARCHAR)')
     conn.execute('INSERT INTO compression_dict (data) VALUES (?)', (zstd_dict.as_bytes(),))
     conn.execute('CREATE TABLE variant_df (id INTEGER PRIMARY KEY, phecode VARCHAR, genename VARCHAR, chrom VARCHAR, df VARCHAR)')
     conn.executemany('INSERT INTO variant_df (phecode, genename, chrom, df) VALUES (?,?,?,?)', variant_df_gen())
     conn.execute('CREATE INDEX idx_variantdf_phecode_genename ON variant_df (phecode,genename)')
+if os.path.exists(db_filepath): os.unlink(db_filepath)
+os.rename(db_tmp_filepath, db_filepath)
+print('made', db_filepath)
