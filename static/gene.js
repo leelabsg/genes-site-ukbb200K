@@ -79,7 +79,7 @@ $.getJSON('/api/gene/'+model.genename).then(function(resp) {
                 {title: '#Controls', field:'num_controls'},
                 {title: 'P-value', field:'pval'},
                 {title: '#Rare Variants', field:'num_rare'},
-                {title: 'Start-End', field:'start', formatter: function(cell){console.log(cell); return cell.getValue()+' - '+cell.getData().end}, headerFilter:true},
+                {title: 'Start-End', field:'start', formatter: function(cell){return cell.getValue()+' - '+cell.getData().end}, headerFilter:true},
                 {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
                 {title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
             ],
