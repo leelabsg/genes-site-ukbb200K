@@ -133,6 +133,7 @@ function tabulator_tooltip_maker(cell) {
     if (e.clientWidth >= e.scrollWidth) {
         return false; // all the text is shown, so there is no '...', so no tooltip is needed
     } else {
-        return cell.getValue();
+        //return cell.getValue();
+        return cell.getElement().innerText;
     }
 }
