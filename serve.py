@@ -98,7 +98,7 @@ def pheno_api(phecode):
     return jsonify(dict(assocs=df, num_genes=num_genes))
 
 
-@app.route('/api/variants/<genename>/<phecode>/')
+@app.route('/api/variants/<genename>/<phecode>')
 def variants_api(genename, phecode):
     matches = list(get_db().execute('SELECT id FROM gene WHERE name = ?', (genename,)))
     if not matches: return abort(404)
