@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import sqlite3, re, itertools
+import sqlite3, re, itertools, json
+import zstandard
 from flask import g, Flask, jsonify, abort, render_template, request, url_for, redirect
 from flask_compress import Compress
 app = Flask(__name__)
@@ -12,14 +13,12 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 60*5
 DATABASE = 'assoc.db'
 def get_db():
     db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
+    if db is None: db = g._database = sqlite3.connect(DATABASE)
     return db
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
+    if db is not None: db.close()
 def get_df(query, args=()):
     '''get a dataframe (eg, `{phecode:['008','008.5'],pval:[0.3,0.01]}`) from the database'''
     cur = get_db().execute(query, args)
@@ -27,7 +26,6 @@ def get_df(query, args=()):
     rows = cur.fetchall()
     cur.close()
     return {colname: [row[i] for row in rows] for i, colname in enumerate(colnames)}
-
 
 @app.route('/')
 def index_page():
@@ -98,6 +96,31 @@ def pheno_api(phecode):
                 'WHERE pheno_id=? '
                 'ORDER BY pval LIMIT 2000', (pheno_id,))
     return jsonify(dict(assocs=df, num_genes=num_genes))
+
+
+@app.route('/api/variants/<genename>/<phecode>/')
+def variants_api(genename, phecode):
+    matches = list(get_db().execute('SELECT id FROM gene WHERE name = ?', (genename,)))
+    if not matches: return abort(404)
+    matches = list(get_db().execute('SELECT id FROM pheno WHERE phecode=?', (phecode,)))
+    if not matches: return abort(404)
+    variant_fetcher = getattr(g, '_variant_fetcher', None)
+    if variant_fetcher is None: variant_fetcher = g._variant_fetcher = VariantFetcher()
+    x = variant_fetcher.get(phecode, genename)
+    return jsonify(x)
+class VariantFetcher:
+    def __init__(self):
+        self.db = sqlite3.connect('variant.db')
+        self.db.row_factory = sqlite3.Row
+        zstd_dict = list(self.db.execute('SELECT data FROM compression_dict'))[0]['data']
+        self.zstd_decompressor = zstandard.ZstdDecompressor(dict_data=zstandard.ZstdCompressionDict(zstd_dict))
+    def get(self, phecode, genename):
+        matches = list(self.db.execute('SELECT phecode,genename,chrom,df FROM variant_df WHERE phecode=? AND genename=?', (phecode,genename)))
+        if len(matches) != 1: raise Exception('VariantFetcher got {} matches: {}'.format(len(matches), repr(matches)))
+        m = matches[0]
+        decompressed = self.zstd_decompressor.decompress(m['df'])
+        df = json.loads(decompressed)
+        return dict(phecode=m['phecode'], genename=m['genename'], chrom=m['chrom'], df=df)
 
 
 class Autocompleter:
