@@ -75,16 +75,16 @@ def pheno_page(phecode):
 #                            pval=pval, genes=genes, selected_genes=selected_genes)
 
 
-# @app.route('/api/pathway/<pathway_name>')
-# def pathway_api(pathway_name):
-#     matches = list(get_db().execute('SELECT id,url,category,genesettype,genes_comma FROM pathway WHERE name = ?', (pathway_name,)))
-#     if not matches: return abort(404)
-#     pathway_id = matches[0][0]
-#     df = get_df('SELECT phecode,phenostring,category,num_cases,num_controls,pval,selected_genes_comma FROM pheno_pathway_assoc '
-#                 'LEFT JOIN pheno ON pheno_pathway_assoc.pheno_id=pheno.id '
-#                 'WHERE pathway_id=? '
-#                 'ORDER BY phecode', (pathway_id,))
-#     return jsonify(dict(url=matches[0][1], category=matches[0][2], genesettype=matches[0][3], genes=matches[0][4].split(','), assocs=df))
+@app.route('/api/gene/<genename>')
+def gene_api(genename):
+    matches = list(get_db().execute('SELECT id FROM gene WHERE name = ?', (genename,)))
+    if not matches: return abort(404)
+    gene_id = matches[0][0]
+    df = get_df('SELECT phecode,phenostring,category,pval,start,end,num_rare,mac_case,mac_control,num_cases,num_controls FROM assoc '
+                'LEFT JOIN pheno ON assoc.pheno_id=pheno.id '
+                'WHERE gene_id=? '
+                'ORDER BY phecode', (gene_id,))
+    return jsonify(dict(assocs=df))
 
 # @app.route('/api/pheno/<phecode>')
 # def pheno_api(phecode):
