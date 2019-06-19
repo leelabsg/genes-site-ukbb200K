@@ -1,13 +1,23 @@
 'use strict';
 
+function pos_to_int(position) {
+    // converts `4:88262659:T:C` to 4e10+88262659
+    var parts = position.split(':');
+    return parseInt(parts[0])*1e11 + parseInt(parts[1]);
+}
+
 $.getJSON('/api/pheno/'+model.phecode).then(function(resp) {
+    var num_genes = resp.num_genes;
     var assocs = resp.assocs;
+
+    assocs = objects_to_dataframe(_.sortBy(dataframe_to_objects(assocs), function(d) {return pos_to_int(d.start)}));
+
     assocs.id = assocs.name;
     assocs.trait_label = assocs.name;
     assocs.log_pvalue = assocs.pval.map(function(p) { return -Math.log10(Math.max(1e-6, p)); });
-    assocs.trait_group = assocs.start.map(function(s) { return 'chr'+s.split(':',1)[0]; });
+    assocs.trait_group = assocs.start.map(function(s) { return 'chr'+s.split(':',1)[0].padStart(2, '0'); });
 
-    var significance_threshold = -Math.log10(0.05 / assocs.id.length);
+    var significance_threshold = -Math.log10(0.05 / num_genes);
     var best_nlpval = d3.max(assocs.log_pvalue);
 
     var data_sources = new LocusZoom.DataSources().add('phewas', ['StaticJSON', assocs]);
@@ -88,7 +98,7 @@ $.getJSON('/api/pheno/'+model.phecode).then(function(resp) {
                 {title: '#Controls', field:'num_controls'},
                 {title: 'P-value', field:'pval'},
                 {title: '#Rare Variants', field:'num_rare'},
-                {title: 'Start-End', field:'start', formatter: function(cell){return cell.getValue()+' - '+cell.getData().end}, headerFilter:true},
+                {title: 'Start-End', field:'start', formatter: function(cell){return cell.getValue()+' - '+cell.getData().end}, headerFilter:'input', headerFilterFunc:function(query, cellValue){return cellValue.startsWith(query)}, sorter: function(a, b) { return pos_to_int(a) - pos_to_int(b);}},
                 {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
                 {title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
             ],

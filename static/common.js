@@ -18,6 +18,29 @@ if (!String.prototype.includes) {
     }
   };
 }
+if (!String.prototype.padStart) {
+    String.prototype.padStart = function padStart(targetLength, padString) {
+        targetLength = targetLength >> 0; //truncate if number, or convert non-number to 0;
+        padString = String(typeof padString !== 'undefined' ? padString : ' ');
+        if (this.length >= targetLength) {
+            return String(this);
+        } else {
+            targetLength = targetLength - this.length;
+            if (targetLength > padString.length) {
+                padString += padString.repeat(targetLength / padString.length); //append to original to ensure we are longer than needed
+            }
+            return padString.slice(0, targetLength) + String(this);
+        }
+    };
+}
+if (!String.prototype.startsWith) {
+    Object.defineProperty(String.prototype, 'startsWith', {
+        value: function(search, pos) {
+            pos = !pos || pos < 0 ? 0 : +pos;
+            return this.substring(pos, pos + search.length) === search;
+        }
+    });
+}
 
 (function() {
     // It's unfortunate that these are hard-coded, but it works pretty great, so I won't change it now.
@@ -88,4 +111,11 @@ function dataframe_to_objects(df) {
         }
     });
     return objects;
+}
+function objects_to_dataframe(objs) {
+    var df = {};
+    Object.keys(objs[0]).forEach(function(key) {
+        df[key] = objs.map(_.property(key));
+    });
+    return df;
 }

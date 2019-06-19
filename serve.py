@@ -92,11 +92,12 @@ def pheno_api(phecode):
     matches = list(get_db().execute('SELECT id FROM pheno WHERE phecode=?', (phecode,)))
     if not matches: return abort(404)
     pheno_id = matches[0][0]
+    num_genes = list(get_db().execute('SELECT COUNT(*) FROM assoc WHERE pheno_id=? ', (pheno_id,)))[0][0]
     df = get_df('SELECT name,pval,start,end,num_rare,mac_case,mac_control,num_cases,num_controls FROM assoc '
                 'LEFT JOIN gene ON assoc.gene_id=gene.id '
                 'WHERE pheno_id=? '
-                'ORDER BY pval LIMIT 1000', (pheno_id,))
-    return jsonify(dict(assocs=df))
+                'ORDER BY pval LIMIT 2000', (pheno_id,))
+    return jsonify(dict(assocs=df, num_genes=num_genes))
 
 
 class Autocompleter:
