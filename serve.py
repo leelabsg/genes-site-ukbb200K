@@ -42,36 +42,37 @@ def genes_page():
 
 @app.route('/gene/<genename>')
 def gene_page(genename):
-    matches = list(get_db().execute('SELECT id FROM gene WHERE name = ?', (genename,)))
+    matches = list(get_db().execute('SELECT chrom FROM gene WHERE name = ?', (genename,)))
     if not matches: return abort(404)
-    return render_template('gene.html', genename=genename)
+    chrom = matches[0][0]
+    return render_template('gene.html', genename=genename, chrom=chrom)
 
 @app.route('/pheno/<phecode>')
 def pheno_page(phecode):
-    matches = list(get_db().execute('SELECT id,phenostring,category FROM pheno WHERE phecode=?', (phecode,)))
+    matches = list(get_db().execute('SELECT phenostring,category,num_cases,num_controls FROM pheno WHERE phecode=?', (phecode,)))
     if not matches: return abort(404)
-    phenostring, category = matches[0][1:]
-    return render_template('pheno.html', phecode=phecode, phenostring=phenostring, category=category)
+    phenostring, category, num_cases, num_controls = matches[0]
+    return render_template('pheno.html', phecode=phecode, phenostring=phenostring, category=category, num_cases=num_cases, num_controls=num_controls)
 
 @app.route('/assoc/<genename>/<phecode>')
 def assoc_page(genename, phecode):
-    matches = list(get_db().execute('SELECT id,phenostring,category FROM pheno WHERE phecode=?', (phecode,)))
+    matches = list(get_db().execute('SELECT id,phenostring,category,num_cases,num_controls FROM pheno WHERE phecode=?', (phecode,)))
     if not matches: return abort(404)
-    pheno_id, phenostring, pheno_category = matches[0]
+    pheno_id, phenostring, category, num_cases, num_controls = matches[0]
 
-    matches = list(get_db().execute('SELECT id  FROM gene WHERE name = ?', (genename,)))
+    matches = list(get_db().execute('SELECT id,chrom FROM gene WHERE name = ?', (genename,)))
     if not matches: return abort(404)
-    gene_id = matches[0][0]
+    gene_id,chrom = matches[0]
 
-    matches = list(get_db().execute('SELECT pval,num_rare, start,end, mac_case,mac_control,num_cases,num_controls FROM assoc '
+    matches = list(get_db().execute('SELECT pval,num_rare, startpos,endpos, mac_case,mac_control FROM assoc '
                                     'LEFT JOIN gene ON assoc.gene_id=gene.id '
                                     'WHERE pheno_id=? AND gene_id=?', (pheno_id, gene_id)))
     if not matches: return abort(404)
     m = matches[0]
     return render_template('assoc.html',
-                           phecode=phecode, phenostring=phenostring, pheno_category=pheno_category,
+                           phecode=phecode, phenostring=phenostring, category=category, num_cases=num_cases, num_controls=num_controls,
                            genename=genename,
-                           pval=m[0],num_rare=m[1], start=m[2],end=m[3], mac_case=m[4],mac_control=m[5], num_cases=m[6],num_controls=m[7])
+                           pval=m[0],num_rare=m[1], chrom=chrom,startpos=m[2],endpos=m[3], mac_case=m[4],mac_control=m[5])
 
 
 @app.route('/api/gene/<genename>')
@@ -79,7 +80,7 @@ def gene_api(genename):
     matches = list(get_db().execute('SELECT id FROM gene WHERE name = ?', (genename,)))
     if not matches: return abort(404)
     gene_id = matches[0][0]
-    df = get_df('SELECT phecode,phenostring,category,pval,start,end,num_rare,mac_case,mac_control,num_cases,num_controls FROM assoc '
+    df = get_df('SELECT phecode,phenostring,category,pval,startpos,endpos,num_rare,mac_case,mac_control,num_cases,num_controls FROM assoc '
                 'LEFT JOIN pheno ON assoc.pheno_id=pheno.id '
                 'WHERE gene_id=? '
                 'ORDER BY phecode', (gene_id,))
@@ -91,7 +92,7 @@ def pheno_api(phecode):
     if not matches: return abort(404)
     pheno_id = matches[0][0]
     num_genes = list(get_db().execute('SELECT COUNT(*) FROM assoc WHERE pheno_id=? ', (pheno_id,)))[0][0]
-    df = get_df('SELECT name,pval,start,end,num_rare,mac_case,mac_control,num_cases,num_controls FROM assoc '
+    df = get_df('SELECT name,pval,startpos,endpos,num_rare,mac_case,mac_control,chrom FROM assoc '
                 'LEFT JOIN gene ON assoc.gene_id=gene.id '
                 'WHERE pheno_id=? '
                 'ORDER BY pval LIMIT 2000', (pheno_id,))
@@ -145,7 +146,7 @@ class Autocompleter:
     def get_best_completion(self, query):
         completions = self.get_completions(query)
         if not completions: return None
-        return completions[0] # TODO
+        return completions[0] # TODO: make this better, perhaps by checking for exact matches.
     def get_completions_on_phecode(self, processed_query):
         processed_query = processed_query.strip()
         if not re.match(r'^[0-9]+(?:\.[0-9]*)?$', processed_query): return
@@ -153,8 +154,7 @@ class Autocompleter:
             if p['phecode'].startswith(processed_query):
                 yield {
                     'value': p['phecode'],
-                    #'display': '{} ({})'.format(p['phecode'], p['phenostring']),
-                    'display': p['phecode'],
+                    'display': '{} ({})'.format(p['phecode'], p['phenostring']),
                     'url': url_for('pheno_page', phecode=p['phecode'])
                 }
     def get_completions_on_phenostring(self, processed_query):

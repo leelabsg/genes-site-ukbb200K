@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+# TODO: use BLOB for variant_df(df)
 '''
 this script creates `variant.db` which contains all the variants for each (phecode, gene) pair.
 the variant data is encoded in dataframe (dictionary of lists) format.

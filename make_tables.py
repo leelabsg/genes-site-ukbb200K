@@ -12,13 +12,14 @@ conn.row_factory = sqlite3.Row
 pheno_by_id = {}
 for row in conn.execute('SELECT * FROM pheno'):
     pheno_by_id[row['id']] = dict(
-        phecode=row['phecode'], phenostring=row['phenostring'], category=row['category'],
+        phecode=row['phecode'], phenostring=row['phenostring'], category=row['category'], num_cases=row['num_cases'], num_controls=row['num_controls'],
+        phecode_exclude_range=row['phecode_exclude_range'], phecode_exclude_description=row['phecode_exclude_description'], sex=row['sex'],
         best_pval=999, best_assoc=None, num_sig_assocs=0)
 
 gene_by_id = {}
 for row in conn.execute('SELECT * FROM gene'):
     gene_by_id[row['id']] = dict(
-        name=row['name'],
+        name=row['name'], chrom=row['chrom'],
         best_pval=999, best_assoc=None, num_sig_assocs=0)
 
 for i, row in enumerate(conn.execute('SELECT * FROM assoc')):
@@ -28,7 +29,7 @@ for i, row in enumerate(conn.execute('SELECT * FROM assoc')):
     gene = gene_by_id[row['gene_id']]
     if pval < pheno['best_pval']: pheno['best_pval'], pheno['best_assoc'] = pval, gene['name']
     if pval < gene['best_pval']: gene['best_pval'], gene['best_assoc'] = pval, pheno['phecode']
-    if pval < 1e-4:
+    if pval <= 1e-4:
         pheno['num_sig_assocs'] += 1
         gene['num_sig_assocs'] += 1
 

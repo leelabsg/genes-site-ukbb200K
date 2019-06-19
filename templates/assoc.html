@@ -22,14 +22,11 @@
           <a href="/pheno/{{ phecode }}" class="btn btn-primary">Go to pheno {{ phecode }}</a>
           <a href="/gene/{{ genename }}" class="btn btn-primary">Go to gene {{ genename }}</a>
         </p>
-        <p>pval: <i>{{ pval }}</i></p>
-        <p>Number of Rare Variants: <i>{{ num_rare }}</i></p>
-        <p>Start Position: <i>{{ start }}</i></p>
-        <p>End Position: <i>{{ end }}</i></p>
-        <p>Minor Allele Count in Cases: <i>{{ mac_case }}</i></p>
-        <p>Minor Allele Count in Controls: <i>{{ mac_control }}</i></p>
-        <p>Number of Cases: <i>{{ num_cases }}</i></p>
-        <p>Number of Controls: <i>{{ num_controls }}</i></p>
+        <p>pval: <b>{{ pval }}</b></p>
+        <p>Number of Rare Variants: <b>{{ num_rare }}</b></p>
+        <p>Chrom : Start - End: <b>{{chrom}} : {{startpos}} - {{endpos}}</b></p>
+        <p>Minor Allele Count in Cases / Controls: <b>{{mac_case}}</b> / <b>{{mac_control}}</b></p>
+        <p>Number of Cases / Controls: <b>{{ num_cases }}</b> / <b>{{num_controls}}</b></p>
     </div>
 </div>
 <div class="row">

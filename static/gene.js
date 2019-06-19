@@ -30,7 +30,7 @@ $.getJSON('/api/gene/'+model.genename).then(function(resp) {
     layout.panels[0].data_layers[0].offset = significance_threshold;
     layout.panels[0].data_layers[1].fields.push('phewas:phenostring');
     layout.panels[0].data_layers[1].fields.push('phewas:num_rare');
-    layout.panels[0].data_layers[1].fields.push('phewas:start', 'phewas:end');
+    layout.panels[0].data_layers[1].fields.push('phewas:startpos', 'phewas:endpos');
     layout.panels[0].data_layers[1].fields.push('phewas:mac_case', 'phewas:mac_control');
     layout.panels[0].data_layers[1].fields.push('phewas:num_cases', 'phewas:num_controls');
     layout.panels[0].data_layers[1].tooltip.html =
@@ -40,7 +40,7 @@ $.getJSON('/api/gene/'+model.genename).then(function(resp) {
          "#Rare Variants: <strong>{{phewas:num_rare}}</strong><br>" +
          "#Cases / #Controls: <strong>{{phewas:num_cases}} / {{phewas:num_controls}}</strong><br>" +
          "Case / Control MAC: <strong>{{phewas:mac_case}} / {{phewas:mac_control}}</strong><br>" +
-         "Start - End: <strong>{{phewas:start}} - {{phewas:end}}</strong><br>"
+         "Start - End: <strong>{{phewas:startpos}} - {{phewas:endpos}}</strong><br>"
         );
     layout.panels[0].data_layers[1].behaviors.onclick = [{action: 'link', href: '/assoc/'+model.genename+'/{{phewas:id}}'}];
     layout.panels[0].data_layers[1].y_axis.min_extent = [0, significance_threshold*1.1];
@@ -79,7 +79,7 @@ $.getJSON('/api/gene/'+model.genename).then(function(resp) {
                 {title: '#Controls', field:'num_controls'},
                 {title: 'P-value', field:'pval'},
                 {title: '#Rare Variants', field:'num_rare'},
-                {title: 'Start-End', field:'start', formatter: function(cell){return cell.getValue()+' - '+cell.getData().end}, headerFilter:true},
+                {title: 'Start-End', field:'startpos', formatter: function(cell){return cell.getValue()+' - '+cell.getData().endpos}},
                 {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
                 {title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
             ],
