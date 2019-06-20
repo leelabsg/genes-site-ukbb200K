@@ -6,6 +6,8 @@
 # MAYBE: use sqlite instead of json so that the browser can page?
 
 import sqlite3, json, os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 conn = sqlite3.connect('assoc.db')
 conn.row_factory = sqlite3.Row
 

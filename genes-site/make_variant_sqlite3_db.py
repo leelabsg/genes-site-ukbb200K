@@ -23,6 +23,7 @@ file size comparison:
 
 import sqlite3, gzip, csv, os, itertools, json
 import zstandard
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 db_filepath = 'variant.db'
 
@@ -32,7 +33,7 @@ print(len(phecodes), 'phecodes')
 def get_genes_variantdata():
     for i,phecode in enumerate(phecodes):
         print('  -', i, phecode)
-        with gzip.open('input_data/variant/result_singlevariant_{}.txt.gz'.format(phecode), 'rt') as f:
+        with gzip.open('../input_data/variant/result_singlevariant_{}.txt.gz'.format(phecode), 'rt') as f:
             rows = csv.DictReader(f, delimiter=' ')
             for genename,rowgroup in itertools.groupby(rows, key=lambda r:r['GeneName']):
                 # we use pos_delta instead of `pos` to try to save space

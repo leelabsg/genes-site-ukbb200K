@@ -2,3 +2,5 @@ assoc.db
 variant.db
 genes.json
 phenotypes.json
+gene/
+variant/

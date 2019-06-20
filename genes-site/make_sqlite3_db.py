@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os, re, gzip, sqlite3, csv, math
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def round_sig(x, digits):
     if x == 0:
@@ -15,16 +16,16 @@ assert round_sig(0.00123, 2) == 0.0012
 assert round_sig(1.59e-10, 2) == 1.6e-10
 
 # make list of phenotypes
-filenames = os.listdir('input_data/gene')
+filenames = os.listdir('../input_data/gene')
 for fname in filenames: assert re.match(r'result_gene_([0-9]{3,4}(?:\.[0-9]{1,2})?).txt.gz$', fname), fname
 phecodes = set(re.match(r'result_gene_([0-9]{3,4}(?:\.[0-9]{1,2})?).txt.gz$', fname).group(1) for fname in filenames)
 print(len(phecodes), 'phecodes')
 # also check variant files
-filenames_for_variants = os.listdir('input_data/variant')
+filenames_for_variants = os.listdir('../input_data/variant')
 for fname in filenames_for_variants: assert re.match(r'result_singlevariant_([0-9]{3,4}(?:\.[0-9]{1,2})?).txt.gz$', fname), fname
 assert phecodes == set(re.match(r'result_singlevariant_([0-9]{3,4}(?:\.[0-9]{1,2})?).txt.gz$', fname).group(1) for fname in filenames_for_variants)
 phenos = {}
-for row in csv.DictReader(open('input_data/phenotype-info.csv')):
+for row in csv.DictReader(open('../input_data/phenotype-info.csv')):
     if row['phecode'] not in phecodes: continue
     phenos[row['phecode']] = {
         'phenostring': row['description'],
@@ -38,7 +39,7 @@ for row in csv.DictReader(open('input_data/phenotype-info.csv')):
 for phecode in phecodes: assert phecode in phenos, phecode
 assert 2 <= len(set(p['category'] for p in phenos.values())) < 100
 for phecode, pheno in phenos.items():
-    with gzip.open('input_data/gene/result_gene_{}.txt.gz'.format(phecode), 'rt') as f:
+    with gzip.open('../input_data/gene/result_gene_{}.txt.gz'.format(phecode), 'rt') as f:
         for row in csv.DictReader(f, delimiter=' '):
             pheno['num_cases'] = int(row['Case'])
             pheno['num_controls'] = int(row['Control'])
@@ -48,7 +49,7 @@ for phecode, pheno in phenos.items():
 # file are each missing a few genes.  we get the full 18336 after reading ~5 files.
 genes = {}
 for phecode in phecodes:
-    with gzip.open('input_data/gene/result_gene_{}.txt.gz'.format(phecode), 'rt') as f:
+    with gzip.open('../input_data/gene/result_gene_{}.txt.gz'.format(phecode), 'rt') as f:
         f.readline() # eat the header
         for line in f:
             genename, start, _ = line.split(' ',2)
@@ -78,7 +79,7 @@ def assoc_row_generator(): # doesn't output primary key, let's sqlite3 auto-incr
         pheno = phenos[phecode]
         filename = 'result_gene_{}.txt.gz'.format(phecode)
         print(i, filename)
-        with gzip.open('input_data/gene/' + filename, 'rt') as f:
+        with gzip.open('../input_data/gene/' + filename, 'rt') as f:
             assert f.readline().strip().split() == 'GeneName Start_Pos End_Pos NumofRareVariants MAC_Case MAC_Control Case Control p.value'.split()
             for line in f:
                 try:
