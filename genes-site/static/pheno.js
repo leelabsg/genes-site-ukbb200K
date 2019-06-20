@@ -333,13 +333,13 @@ function create_gwas_plot(variant_bins, unbinned_variants, significance_threshol
             .on('mouseout', significance_threshold_tooltip.hide);
 
         // Points & labels
-        var tooltip_template = _.template(
-            '<%= d.name %><br>' +
-                'P-value: <%= d.pval.toExponential(1) %><br>' +
-                '#Rare Variants: <%= d.num_rare %><br>' +
-                'Case / Control MAC: <%= d.mac_case %> / <%= d.mac_control %><br>' +
-                'Chrom:Start-End: <%= d.chrom %>:<%= d.startpos %>-<%= d.endpos %>' +
-                '');
+        var tooltip_template = _.template([
+            '<%= d.name %>',
+            'Chr<%= d.chrom %> : <%= d.startpos.toLocaleString() %> - <%= d.endpos.toLocaleString() %>',
+            'P-value: <%= d.pval.toExponential(1) %>',
+            '#Rare Variants: <%= d.num_rare %>',
+            'Case / Control MAC: <%= d.mac_case %> / <%= d.mac_control %>',
+        ].join('<br>'));
         var point_tooltip = d3.tip()
             .attr('class', 'd3-tip')
             .html(function(d) {
