@@ -1,5 +1,4 @@
 assoc.db
 variant.db
-input_data
-static/genes.json
-static/phenotypes.json
+genes.json
+phenotypes.json
