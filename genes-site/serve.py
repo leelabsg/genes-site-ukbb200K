@@ -2,7 +2,7 @@
 
 from io import BytesIO
 from gzip import GzipFile
-import sqlite3, re, itertools, json
+import sqlite3, re, itertools, json, math
 import zstandard
 from flask import g, Flask, jsonify, abort, render_template, request, url_for, redirect
 app = Flask(__name__)
@@ -95,8 +95,39 @@ def pheno_api(phecode):
     df = get_df('SELECT name,pval,startpos,endpos,num_rare,mac_case,mac_control,chrom FROM assoc '
                 'LEFT JOIN gene ON assoc.gene_id=gene.id '
                 'WHERE pheno_id=? '
-                'ORDER BY pval LIMIT 2000', (pheno_id,))
-    return jsonify(dict(assocs=df, num_genes=num_genes))
+                'ORDER BY pval', (pheno_id,))
+    print(df['pval'][999:1002])
+    unbinned, manhattan_bins = make_manhattan_bins(df)
+    return jsonify(dict(assocs=unbinned, manhattan_bins=manhattan_bins, num_genes=num_genes))
+def make_manhattan_bins(df):
+    assert set(df.keys()) == set('name pval startpos endpos num_rare mac_case mac_control chrom'.split())
+    unbinned = {key:values[:1000] for key,values in df.items()}
+    # objs_to_bin = [{key:df[key][i] for key in df.keys()} for i in range(1000, len(df['pval']))]
+    # objs_to_bin.sort(key=lambda x:x['
+    pos_bin_size = int(4e6)
+    nlpval_bin_size = 0.05
+    nlpvals_by_chrompos = {} # {('1',0): [0, 0.05, 0.1, 0.45], ('1',3e6): [2.4]}
+    for i in range(1000, len(df['pval'])):
+        chrom = df['chrom'][i]
+        binned_pos = int(df['startpos'][i] // pos_bin_size * pos_bin_size + pos_bin_size/2)
+        nlpval = 999 if df['pval'][i]==0 else -math.log10(df['pval'][i])
+        binned_nlpval = nlpval // nlpval_bin_size * nlpval_bin_size + nlpval_bin_size/2
+        binned_nlpval = round(binned_nlpval, 3) # trim `0.35000000000000003` to `0.35` for convenience and network request size
+        nlpvals_by_chrompos.setdefault((chrom, binned_pos), set()).add(binned_nlpval)
+    bins = []
+    for (chrom,pos), nlpvals in nlpvals_by_chrompos.items():
+        nlpvals = sorted(nlpvals)
+        extents = [[nlpvals[0], nlpvals[0]]]
+        for nlpval in nlpvals:
+            if nlpval < extents[-1][1] + nlpval_bin_size * 1.1: extents[-1][1] = nlpval
+            else: extents.append([nlpval, nlpval])
+        result_nlpvals, result_nlpval_extents = [], []
+        for (start, end) in extents:
+            if start == end: result_nlpvals.append(start)
+            else: result_nlpval_extents.append([start,end])
+        bins.append(dict(chrom=chrom, pos=pos, nlpvals=result_nlpvals, nlpval_extents=result_nlpval_extents))
+    bins.sort(key=lambda x:(int(x['chrom']) if x['chrom'].isdigit() else 99+hash(x['chrom']), x['pos']))
+    return (unbinned, bins)
 
 
 @app.route('/api/variants/<genename>/<phecode>')
