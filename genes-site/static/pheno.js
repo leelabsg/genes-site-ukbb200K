@@ -335,7 +335,7 @@ function create_gwas_plot(variant_bins, unbinned_variants, significance_threshol
         // Points & labels
         var tooltip_template = _.template(
             '<%= d.name %><br>' +
-                'P-value: <%= d.pval %><br>' +
+                'P-value: <%= d.pval.toExponential(1) %><br>' +
                 '#Rare Variants: <%= d.num_rare %><br>' +
                 'Case / Control MAC: <%= d.mac_case %> / <%= d.mac_control %><br>' +
                 'Chrom:Start-End: <%= d.chrom %>:<%= d.startpos %>-<%= d.endpos %>' +
