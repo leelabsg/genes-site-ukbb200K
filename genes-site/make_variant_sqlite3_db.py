@@ -28,11 +28,11 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 db_filepath = 'variant.db'
 
 phecodes = [row[0] for row in sqlite3.connect('assoc.db').execute('SELECT phecode FROM pheno')]
-print(len(phecodes), 'phecodes')
+print('found', len(phecodes), 'phecodes')
 
 def get_genes_variantdata():
     for i,phecode in enumerate(phecodes):
-        print('  -', i, phecode)
+        print(' - reading pheno#{}: {}'.format(i, phecode))
         with gzip.open('../input_data/variant/result_singlevariant_{}.txt.gz'.format(phecode), 'rt') as f:
             rows = csv.DictReader(f, delimiter=' ')
             for genename,rowgroup in itertools.groupby(rows, key=lambda r:r['GeneName']):
@@ -57,10 +57,10 @@ def get_genes_variantdata():
 
 samples = [variant_data for phecode,genename,chrom,variant_data in itertools.islice(get_genes_variantdata(), 0, 18700*4)] # ~4 phenos
 # similar to `zstd --train variant-zstd-training/* -o zstd-variant-dictionary`
-print('collected samples')
+print('collected samples for zstd dict training')
 zstd_dict = zstandard.train_dictionary(131072, samples) # docs use 131072 and `zstd --train` produced 112KB
 #with open(zstd_dict_filepath, 'wb') as f: f.write(zstd_dict.as_bytes()) # usable by `zstd -D dict < text > compressed`
-print('trained zstd_dict')
+print('trained zstd_dict on samples')
 
 zstd_compressor = zstandard.ZstdCompressor(level=8, dict_data=zstd_dict) # level=8 is a decent middleground
 def variant_df_gen():
@@ -76,6 +76,7 @@ with conn:
     conn.execute('CREATE TABLE variant_df (id INT PRIMARY KEY, phecode TEXT, genename TEXT, chrom TEXT, df TEXT)')
     conn.executemany('INSERT INTO variant_df (phecode, genename, chrom, df) VALUES (?,?,?,?)', variant_df_gen())
     conn.execute('CREATE INDEX idx_variantdf_phecode_genename ON variant_df (phecode,genename)')
+print('finished ', db_tmp_filepath)
 if os.path.exists(db_filepath): os.unlink(db_filepath)
 os.rename(db_tmp_filepath, db_filepath)
-print('made', db_filepath)
+print('moved to ', db_filepath)
