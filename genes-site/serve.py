@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from io import BytesIO
+from gzip import GzipFile
 import sqlite3, re, itertools, json
 import zstandard
 from flask import g, Flask, jsonify, abort, render_template, request, url_for, redirect
