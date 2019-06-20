@@ -5,7 +5,7 @@ $.getJSON('/api/gene/'+model.genename).then(function(resp) {
     var assocs = resp.assocs;
     assocs.id = assocs.phecode;
     assocs.trait_label = assocs.phecode.map(function(d, i) { return assocs.phecode[i] + ' - ' + assocs.phenostring[i]; });;
-    assocs.log_pvalue = assocs.pval.map(function(p) { return -Math.log10(Math.max(1e-6, p)); });
+    assocs.log_pvalue = assocs.pval.map(function(p) { return -Math.log10(Math.max(1e-100, p)); });
     assocs.trait_group = assocs.category;
 
     var significance_threshold = -Math.log10(0.05 / assocs.id.length);

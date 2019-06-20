@@ -16,7 +16,7 @@ $.getJSON('/api/pheno/'+model.phecode).then(function(resp) {
 
     assocs.id = assocs.name;
     assocs.trait_label = assocs.name;
-    assocs.log_pvalue = assocs.pval.map(function(p) { return -Math.log10(Math.max(1e-6, p)); });
+    assocs.log_pvalue = assocs.pval.map(function(p) { return -Math.log10(Math.max(1e-100, p)); });
     assocs.trait_group = assocs.chrom.map(function(s) { return 'chr'+s.toString().padStart(2,'0'); });
 
     var significance_threshold = -Math.log10(0.05 / num_genes);
