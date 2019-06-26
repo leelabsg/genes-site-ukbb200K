@@ -4,3 +4,4 @@ genes.json
 phenotypes.json
 gene/
 variant/
+venv/
