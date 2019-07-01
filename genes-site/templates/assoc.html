@@ -32,7 +32,7 @@
         </p>
         <p>pval: <b>{{ pval }}</b></p>
         <p>Number of Rare Variants: <b>{{ num_rare }}</b></p>
-        <p>Chrom : Start - End: <b>{{chrom}} : {{startpos}} - {{endpos}}</b></p>
+        <p>Chrom : Start - End: <b>{{chrom}} : {{"{:,}".format(startpos)}} - {{"{:,}".format(endpos)}}</b></p>
         <p>Minor Allele Count in Cases / Controls: <b>{{mac_case}}</b> / <b>{{mac_control}}</b></p>
         <p>Number of Cases / Controls: <b>{{ num_cases }}</b> / <b>{{num_controls}}</b></p>
     </div>

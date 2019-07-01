@@ -61,7 +61,7 @@
     <div class="col-xs-12">
         <h1 style="margin-top:0">{{ phecode }}: {{ phenostring }}</h1>
         <p>Category: <b>{{ category }}</b></p>
-        <p>Number of Cases / Controls: <b>{{ num_cases }} / {{ num_controls }}</b></p>
+        <p>Number of Cases / Controls: <b>{{"{:,}".format(num_cases)}} / {{"{:,}".format(num_controls)}}</b></p>
         <p>Showing the top 1000 genes</p>
         <div id="manhattan_plot_container"></div>
     </div>
