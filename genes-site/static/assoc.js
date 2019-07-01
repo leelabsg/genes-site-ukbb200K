@@ -140,11 +140,12 @@ $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp)
     $(function() {
         var plot = LocusZoom.populate("#lz_plot_container", data_sources, layout);
         // resize the genes panel to fit the data, but only once.
+        // Resizing the genes panel is disabled for now due to bugs.  Sometimes the genes data_layer ends up inside the association panel.
         // TODO: give a max-height of 500px.
-        var gene_resize_hook = plot.panels.genes.on('data_rendered', function(){
-            plot.panels.genes.scaleHeightToData();
-            plot.panels.genes.off('data_rendered', gene_resize_hook);
-        });
+        // var gene_resize_hook = plot.panels.genes.on('data_rendered', function(){
+        //     plot.panels.genes.scaleHeightToData();
+        //     plot.panels.genes.off('data_rendered', gene_resize_hook);
+        // });
         window._debug.plot = plot;
     });
 
