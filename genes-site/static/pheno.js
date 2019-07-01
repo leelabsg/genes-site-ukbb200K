@@ -1,78 +1,18 @@
 'use strict';
 
 $.getJSON('/api/pheno/'+model.phecode).then(function(resp) {
+    var assocs_objs = dataframe_to_objects(resp.assocs);
+
+    // Manhattan Plot
+    var unbinned_variants = assocs_objs;
+    var variant_bins = resp.manhattan_bins;
+    unbinned_variants.forEach(function(v){v.pos=v.startpos});
+    var significance_threshold = 0.05 / resp.num_genes;
+    create_gwas_plot(variant_bins, unbinned_variants, significance_threshold);
+
+    // table
     $(function() {
-        var unbinned_variants = dataframe_to_objects(resp.assocs);
-        var variant_bins = resp.manhattan_bins;
-        unbinned_variants.forEach(function(v){v.pos=v.startpos});
-        var significance_threshold = 0.05 / resp.num_genes;
-        console.log(unbinned_variants);
-        console.log(variant_bins);
-        create_gwas_plot(variant_bins, unbinned_variants, significance_threshold);
-    });
-
-    var num_genes = resp.num_genes;
-    var assocs = objects_to_dataframe(_.sortBy(dataframe_to_objects(resp.assocs), _.property('startpos')));
-
-    assocs.id = assocs.name;
-    assocs.trait_label = assocs.name;
-    assocs.log_pvalue = assocs.pval.map(function(p) { return -Math.log10(Math.max(1e-100, p)); });
-    assocs.trait_group = assocs.chrom.map(function(s) { return 'chr'+s.toString().padStart(2,'0'); });
-
-    var significance_threshold = -Math.log10(0.05 / num_genes);
-    var best_nlpval = d3.max(assocs.log_pvalue);
-
-    var data_sources = new LocusZoom.DataSources().add('phewas', ['StaticJSON', assocs]);
-    var layout = {
-        width: 800,
-        height: 400,
-        min_width: 800,
-        min_height: 400,
-        responsive_resize: 'width_only',
-        mouse_guide: false,
-        dashboard: {components: [ {type: 'download', position: 'right', color: 'gray' } ]},
-        panels: [
-            LocusZoom.Layouts.get('panel', 'phewas', {
-                margin: {top: 5, right: 5, bottom: 50, left: 50 }
-            })
-        ],
-    }
-
-    layout.panels[0].data_layers[0].offset = significance_threshold;
-    layout.panels[0].data_layers[1].fields.push('phewas:num_rare');
-    layout.panels[0].data_layers[1].fields.push('phewas:chrom', 'phewas:startpos', 'phewas:endpos');
-    layout.panels[0].data_layers[1].fields.push('phewas:mac_case', 'phewas:mac_control');
-    layout.panels[0].data_layers[1].tooltip.html =
-        ("gene: <strong>{{phewas:trait_label|htmlescape}}</strong><br>" +
-         "P-value: <strong>{{phewas:log_pvalue|logtoscinotation|htmlescape}}</strong><br>" +
-         "#Rare Variants: <strong>{{phewas:num_rare}}</strong><br>" +
-         "Case / Control MAC: <strong>{{phewas:mac_case}} / {{phewas:mac_control}}</strong><br>" +
-         "Chrom:Start-End: <strong>{{phewas:chrom}} : {{phewas:startpos}} - {{phewas:endpos}}</strong><br>"
-        );
-    layout.panels[0].data_layers[1].behaviors.onclick = [{action: 'link', href: '/assoc/{{phewas:id}}/'+model.phecode}];
-    layout.panels[0].data_layers[1].y_axis.min_extent = [0, significance_threshold*1.1];
-
-    if (assocs.id.length <= 10) {
-        layout.panels[0].data_layers[1].label.filters = []; // show all labels
-    } else if (assocs.log_pvalue.filter(function(nlpval) { return nlpval == best_nlpval; }).length >= 6) {
-        layout.panels[0].data_layers[1].label = false; // too many are tied for 1st and will make a mess so just hide all labels
-    } else {
-        var eighth_best_nlpval = _.sortBy(assocs.log_pvalue).reverse()[8];
-        layout.panels[0].data_layers[1].label.filters = [
-            {field: 'phewas:log_pvalue', operator: '>', value: significance_threshold},
-            {field: 'phewas:log_pvalue', operator: '>', value: best_nlpval*0.5}, // must be in top half of screen
-            {field: 'phewas:log_pvalue', operator: '>=', value: eighth_best_nlpval} // must be among the best
-        ];
-    }
-
-    window._debug.assocs = assocs;
-    $(function() {
-        var plot = LocusZoom.populate("#phewas_plot_container", data_sources, layout);
-        window._debug.plot = plot;
-    });
-
-    $(function() {
-        var data = dataframe_to_objects(assocs);
+        var data = assocs_objs;
         var table = new Tabulator('#table', {
             //height: 600, // setting height lets Tabulator's VirtualDOM load really fast but makes scrolling awkward
             layout: 'fitColumns',
