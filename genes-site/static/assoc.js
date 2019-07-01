@@ -1,5 +1,23 @@
 'use strict';
 
+LocusZoom.Data.GwasCatalog.prototype.combineChainBody_orig = LocusZoom.Data.GwasCatalog.prototype.combineChainBody;
+LocusZoom.Data.GwasCatalog.prototype.combineChainBody = function (data, chain, fields, outnames, trans) {
+    // this detects if we are preparing data for the annotation_catalog track
+    // if we are, then it returns all of the GWASCatalog data for this region.
+    // otherwise, it does the normal behavior of returning the association variants leftmerged with the GWASCatalog data.
+    // (ie, normally GWASCatalog hits are only shown if they overlap the position of one of the variants being plotted)
+    if (data.length && fields.length == 4 && fields.indexOf('variant')!==-1) {
+        //console.log({data:data, chain:chain, fields:fields, outnames:outnames, trans:trans});
+        return data.map(function(d) {
+            return {
+                'assoc:variant': d.variant, 'assoc:chromosome': d.chrom, 'assoc:position': d.pos,
+                'catalog:variant': d.variant, 'catalog:rsid': d.rsid, 'catalog:trait': d.trait, 'catalog:log_pvalue': d.log_pvalue
+            }
+        });
+    }
+    return LocusZoom.Data.GwasCatalog.prototype.combineChainBody_orig(data, chain, fields, outnames, trans);
+};
+
 $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp) {
     window._debug.resp = resp;
     var chrom = resp.chrom;
