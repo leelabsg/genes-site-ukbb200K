@@ -137,3 +137,27 @@ function tabulator_tooltip_maker(cell) {
         return cell.getElement().innerText;
     }
 }
+
+function custom_LocusZoom_Layouts_get(layout_type, layout_name, customizations) {
+    // Similar to `LocusZoom.Layouts.get` but also accepts keys like "axes.x.ticks" or "data_layers.1.id_field"
+    var layout = LocusZoom.Layouts.get(layout_type, layout_name);
+    Object.keys(customizations).forEach(function(key) {
+        var value = customizations[key];
+        if (!key.includes(".")) {
+            layout[key] = value;
+        } else {
+            var key_parts = key.split(".");
+            var obj = layout;
+            for (var i=0; i < key_parts.length-1; i++) {
+                // TODO: check that `obj` contains `key_parts[i]`
+                if (key_parts[i].match(/^[0-9]+$/) && Array.isArray(obj)) {
+                    obj = obj[parseInt(key_parts[i])];
+                } else {
+                    obj = obj[key_parts[i]];
+                }
+            }
+            obj[key_parts[key_parts.length-1]] = value;
+        }
+    });
+    return layout;
+}

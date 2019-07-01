@@ -7,7 +7,7 @@ import zstandard
 from flask import g, Flask, jsonify, abort, render_template, request, url_for, redirect
 app = Flask(__name__)
 
-app.config['LZJS_VERSION'] = '0.9.0'
+app.config['LZJS_VERSION'] = '0.9.1'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 60*5
 
 DATABASE = 'assoc.db'

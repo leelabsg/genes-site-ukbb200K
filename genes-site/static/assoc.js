@@ -11,61 +11,140 @@ $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp)
     var data = _.sortBy(dataframe_to_objects(df), _.property('pos'));
 
     // Plot
-    // TODO: switch to a normal LZ plot
     var variants = objects_to_dataframe(data);
-    variants.id = variants.pos.map(function(pos, i) {
-        return fmt('{0}-{1}-{2}', chrom, pos, variants.base[i]);
-    });
-    variants.trait_label = variants.id;
-    variants.trait_group = variants.pos.map(function() { return 'chr'+chrom });
-    variants.log_pvalue = variants.pval.map(function(p) { return -Math.log10(Math.max(1e-100, p)); });
+    variants.chromosome = variants.pos.map(function() {return chrom;});
+    variants.id = variants.pos.map(function(pos, i) { return fmt('{0}:{1}_{2}', chrom, pos, variants.base[i].replace(':','/')); });
+    variants.variant = variants.id;
+    variants.pvalue = variants.pval; delete variants.pval;
+    variants.position = variants.pos; delete variants.pos;
+    //variants.log_pvalue = variants.pval.map(function(p) { return -Math.log10(Math.max(1e-100, p)); });
 
-    var significance_threshold = 3;
-    var best_nlpval = d3.max(variants.log_pvalue);
+    var start_position = d3.min(variants.position);
+    var end_position = d3.max(variants.position);
 
-    var data_sources = new LocusZoom.DataSources().add('phewas', ['StaticJSON', variants]);
+    LocusZoom.TransformationFunctions.set("neglog10_or_100", function(x){return (x === 0) ? 100 : -Math.log10(x);});
+
+    var remoteBase = "https://portaldev.sph.umich.edu/api/v1/";
+    var data_sources = new LocusZoom.DataSources()
+        .add("assoc", ["StaticJSON", variants])
+        .add("catalog", ["GwasCatalogLZ", {url: remoteBase + 'annotation/gwascatalog/results/'}])
+        .add("ld", ["LDLZ", {url: remoteBase + "pair/LD/", params: { pvalue_field: "assoc:pvalue|neglog10_or_100" }}])
+        .add("gene", ["GeneLZ", { url: remoteBase + "annotation/genes/"}])
+        .add("recomb", ["RecombLZ", { url: remoteBase + "annotation/recomb/results/" }]);
+
     var layout = {
+        unnamedspaced: true,
         width: 800,
         height: 400,
-        min_width: 800,
-        min_height: 400,
+        max_region_scale: 1e7, // arbitrary but high enough to show all data
         responsive_resize: 'width_only',
         mouse_guide: false,
         dashboard: {components: [ {type: 'download', position: 'right', color: 'gray' } ]},
+        state: {
+            chr: chrom,
+            start: Math.round(start_position - 10 - (end_position-start_position)/30),
+            end: Math.round(end_position + 10 + (end_position-start_position)/30),
+            genome_build: 'GRCh38',
+        },
         panels: [
-            LocusZoom.Layouts.get('panel', 'phewas', {
-                margin: {top: 5, right: 5, bottom: 50, left: 50 }
+            custom_LocusZoom_Layouts_get("panel", "annotation_catalog", {
+                unnamespaced: true,
+                height: 52, min_height: 52,
+                margin: { top: 30, bottom: 13 },
+                dashboard: { components: [] },
+                title: {
+                    text: 'Hits in GWAS Catalog',
+                    style: {'font-size': '14px'},
+                    x: 50,
+                },
+                "data_layers.0.hit_area_width": 50,
+            }),
+            custom_LocusZoom_Layouts_get("panel", "association_catalog", {
+                unnamedspaced: true,
+                height: 200, min_height: 200,
+                dashboard: { components: [{type:'toggle_legend', position:'right'}] },
+                data_layers: [
+                    LocusZoom.Layouts.get("data_layer", "recomb_rate", { unnamespaced: true }),
+                    LocusZoom.Layouts.get("data_layer", "association_pvalues_catalog", {
+                        unnamespaced: true,
+                        fields: [
+                            "{{namespace[assoc]}}id",
+                            "{{namespace[assoc]}}position",
+                            "{{namespace[assoc]}}pvalue|neglog10_or_100",
+                            "{{namespace[assoc]}}pvalue|scinotation",
+                            "{{namespace[assoc]}}maf|scinotation", "{{namespace[assoc]}}mac_case", "{{namespace[assoc]}}mac_control",
+                            "{{namespace[ld]}}state", "{{namespace[ld]}}isrefvar",
+                            "{{namespace[catalog]}}rsid", "{{namespace[catalog]}}trait", "{{namespace[catalog]}}log_pvalue"
+                        ],
+                        id_field: "{{namespace[assoc]}}id",
+                        tooltip: {
+                            closable: true,
+                            show: {
+                                "or": ["highlighted", "selected"]
+                            },
+                            hide: {
+                                "and": ["unhighlighted", "unselected"]
+                            },
+                            html: "<strong>chr{{{{namespace[assoc]}}id}}</strong><br>" +
+                                "<span style='white-space:nowrap'>P-value: <strong>{{{{namespace[assoc]}}pvalue|scinotation}}</strong></span><br>" +
+                                "MAF: <strong>{{{{namespace[assoc]}}maf|scinotation}}</strong><br>" +
+                                "Case MAC: <strong>{{{{namespace[assoc]}}mac_case}}</strong><br>" +
+                                "Control MAC: <strong>{{{{namespace[assoc]}}mac_control}}</strong><br>" +
+                                "{{#if {{namespace[catalog]}}rsid}}<br><a href=\"https://www.ebi.ac.uk/gwas/search?query={{{{namespace[catalog]}}rsid}}\" target=\"_new\">See hits in GWAS catalog</a>{{/if}}" +
+                                "<br><a href=\"javascript:void(0);\" onclick=\"LocusZoom.getToolTipDataLayer(this).makeLDReference(LocusZoom.getToolTipData(this));\">Make LD Reference</a>"
+                        },
+                        x_axis: { field: "{{namespace[assoc]}}position" },
+                        y_axis: {
+                            axis: 1,
+                            field: "{{namespace[assoc]}}pvalue|neglog10_or_100",
+                            floor: 0,
+                            upper_buffer: 0.1,
+                            min_extent: [0, 10]
+                        }
+                    })
+                ],
+                "legend.origin.y": 15,
+                "margin.top": 10,
+            }),
+            custom_LocusZoom_Layouts_get("panel", "genes", {
+                unnamespaced: true,
+                dashboard: {components: []},
+                data_layers: [
+                    LocusZoom.Layouts.get("data_layer", "genes", {
+                        unnamespaced: true,
+                        fields: ["{{namespace[gene]}}all"],
+                        tooltip: {
+                            closable: true,
+                            show: {
+                                or: ["highlighted", "selected"]
+                            },
+                            hide: {
+                                and: ["unhighlighted", "unselected"]
+                            },
+                            html: "<h4><strong><i>{{gene_name}}</i></strong></h4><div>Gene ID: <strong>{{gene_id}}</strong></div><div>Transcript ID: <strong>{{transcript_id}}</strong></div><div style=\"clear: both;\"></div><table width=\"100%\"><tr><td style=\"text-align: right;\"><a href=\"http://exac.broadinstitute.org/gene/{{gene_id}}\" target=\"_new\">More data on ExAC</a></td></tr></table>"
+                        },
+                        label_exon_spacing: 3,
+                        exon_height: 8,
+                        bounding_box_padding: 5,
+                        track_vertical_spacing: 5
+                    })
+                ],
+                "margin.top": 0,
             })
-        ],
+        ]
     };
-
-    layout.panels[0].data_layers[0].offset = significance_threshold;
-    layout.panels[0].data_layers[1].fields.push('phewas:pos');
-    layout.panels[0].data_layers[1].fields.push('phewas:maf');
-    layout.panels[0].data_layers[1].fields.push('phewas:mac_case', 'phewas:mac_control');
-    layout.panels[0].data_layers[1].tooltip.html =
-        ("<strong>chr{{phewas:trait_label|htmlescape}}</strong><br>" +
-         "P-value: <strong>{{phewas:log_pvalue|logtoscinotation|htmlescape}}</strong><br>" +
-         "Case / Control MAC: <strong>{{phewas:mac_case}} / {{phewas:mac_control}}</strong><br>" +
-         "MAF: <strong>{{phewas:maf}}</strong>"
-        );
-    layout.panels[0].data_layers[1].y_axis.min_extent = [0, significance_threshold*1.1];
-
-    if (variants.id.length <= 10) {
-        layout.panels[0].data_layers[1].label.filters = []; // show all labels
-    } else if (variants.log_pvalue.filter(function(nlpval) { return nlpval == best_nlpval; }).length >= 6) {
-        layout.panels[0].data_layers[1].label = false; // too many are tied for 1st and will make a mess so just hide all labels
-    } else {
-        var eighth_best_nlpval = _.sortBy(variants.log_pvalue).reverse()[8];
-        layout.panels[0].data_layers[1].label.filters = [
-            {field: 'phewas:log_pvalue', operator: '>', value: best_nlpval*0.5}, // must be in top half of screen
-            {field: 'phewas:log_pvalue', operator: '>=', value: eighth_best_nlpval} // must be among the best
-        ];
-    }
+    LocusZoom.Layouts.add("plot", "custom_association", layout);
+    layout = LocusZoom.Layouts.get("plot", "custom_association");
 
     window._debug.variants = variants;
     $(function() {
-        var plot = LocusZoom.populate("#phewas_plot_container", data_sources, layout);
+        var plot = LocusZoom.populate("#lz_plot_container", data_sources, layout);
+        // resize the genes panel to fit the data, but only once.
+        // TODO: give a max-height of 500px.
+        var gene_resize_hook = plot.panels.genes.on('data_rendered', function(){
+            plot.panels.genes.scaleHeightToData();
+            plot.panels.genes.off('data_rendered', gene_resize_hook);
+        });
         window._debug.plot = plot;
     });
 
@@ -78,7 +157,7 @@ $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp)
             pagination: 'local', // TODO: disable pagination if <100 variants
             paginationSize: 100,
             columns: [
-                {title: 'Position on chr'+resp.chrom, field:'pos'},
+                {title: 'Position on chr'+resp.chrom, field:'pos', formatter:function(cell){return cell.getValue().toLocaleString()}},
                 {title: 'Allele', field:'base'},
                 {title: 'MAF (Minor Allele Frequency)', field:'maf'},
                 {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
