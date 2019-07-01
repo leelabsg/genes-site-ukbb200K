@@ -22,10 +22,10 @@ $.getJSON('/api/pheno/'+model.phecode).then(function(resp) {
             paginationSize: 15,
             columns: [
                 {title: 'Gene', field:'name', formatter:'link', formatterParams: {url:function(cell){return '/assoc/'+cell.getValue()+'/'+model.phecode}}, headerFilter:true, widthGrow:3},
-                {title: 'P-value', field:'pval'},
-                {title: '#Rare Variants', field:'num_rare'},
+                {title: 'P-value', field:'pval', formatter:'2digit_fmt'},
+                {title: '#Rare Variants', field:'num_rare', formatter:'comma_fmt'},
                 {title: 'Chromosome', field:'chrom', headerFilter:true, headerFilterFunc:'='},
-                {title: 'Start-End', field:'startpos', formatter: function(cell){return cell.getValue()+' - '+cell.getData().endpos}},
+                {title: 'Start-End', field:'startpos', formatter:function(cell){return cell.getValue().toLocaleString()+' - '+cell.getData().endpos.toLocaleString()}, widthGrow:2},
                 {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
                 {title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
             ],

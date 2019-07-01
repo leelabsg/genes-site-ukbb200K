@@ -176,12 +176,12 @@ $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp)
             pagination: 'local', // TODO: disable pagination if <100 variants
             paginationSize: 100,
             columns: [
-                {title: 'Position on chr'+resp.chrom, field:'pos', formatter:function(cell){return cell.getValue().toLocaleString()}},
+                {title: 'Position on chr'+resp.chrom, field:'pos', formatter:'comma_fmt'},
                 {title: 'Allele', field:'base'},
-                {title: 'MAF (Minor Allele Frequency)', field:'maf'},
+                {title: 'MAF (Minor Allele Frequency)', field:'maf', formatter:'2digit_fmt'},
                 {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
                 {title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
-                {title: 'P-value', field:'pval'},
+                {title: 'P-value', field:'pval', formatter:'2digit_fmt'},
             ],
             data: data,
             initialSort: [{column:'pval', dir:'asc'}],
