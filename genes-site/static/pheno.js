@@ -1,6 +1,8 @@
 'use strict';
 
 $.getJSON('/api/pheno/'+model.phecode).then(function(resp) {
+    window._debug.resp = resp;
+
     var assocs_objs = dataframe_to_objects(resp.assocs);
 
     // Manhattan Plot
