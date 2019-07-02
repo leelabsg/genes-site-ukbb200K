@@ -1,5 +1,7 @@
 'use strict';
 
+LocusZoom.TransformationFunctions.set("commas_in_variant", function(x){return x.replace(/:(\d+)_/, function(_,x){return ' : '+parseInt(x).toLocaleString()+' '})})
+
 LocusZoom.Data.GwasCatalog.prototype.combineChainBody_orig = LocusZoom.Data.GwasCatalog.prototype.combineChainBody;
 LocusZoom.Data.GwasCatalog.prototype.combineChainBody = function (data, chain, fields, outnames, trans) {
     // this detects if we are preparing data for the annotation_catalog track
@@ -103,7 +105,7 @@ $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp)
                             hide: {
                                 "and": ["unhighlighted", "unselected"]
                             },
-                            html: "<strong>chr{{{{namespace[assoc]}}id}}</strong><br>" +
+                            html: "<strong>chr{{{{namespace[assoc]}}id|commas_in_variant}}</strong><br>" +
                                 "<span style='white-space:nowrap'>P-value: <strong>{{{{namespace[assoc]}}pvalue|scinotation}}</strong></span><br>" +
                                 "MAF: <strong>{{{{namespace[assoc]}}maf|scinotation}}</strong><br>" +
                                 "Case MAC: <strong>{{{{namespace[assoc]}}mac_case}}</strong><br>" +

@@ -1,5 +1,7 @@
 'use strict';
 
+LocusZoom.TransformationFunctions.add('commas', function(x){return x.toLocaleString()});
+
 $.getJSON('/api/gene/'+model.genename).then(function(resp) {
     // fields = phecode, phenostring, category, pval
     var assocs = resp.assocs;
@@ -38,9 +40,9 @@ $.getJSON('/api/gene/'+model.genename).then(function(resp) {
          "Category: <strong>{{phewas:trait_group|htmlescape}}</strong><br>" +
          "P-value: <strong>{{phewas:log_pvalue|logtoscinotation|htmlescape}}</strong><br>" +
          "#Rare Variants: <strong>{{phewas:num_rare}}</strong><br>" +
-         "#Cases / #Controls: <strong>{{phewas:num_cases}} / {{phewas:num_controls}}</strong><br>" +
+         "#Cases / #Controls: <strong>{{phewas:num_cases|commas}} / {{phewas:num_controls|commas}}</strong><br>" +
          "Case / Control MAC: <strong>{{phewas:mac_case}} / {{phewas:mac_control}}</strong><br>" +
-         "Start - End: <strong>{{phewas:startpos}} - {{phewas:endpos}}</strong><br>"
+         "Start - End: <strong>{{phewas:startpos|commas}} - {{phewas:endpos|commas}}</strong><br>"
         );
     layout.panels[0].data_layers[1].behaviors.onclick = [{action: 'link', href: '/assoc/'+model.genename+'/{{phewas:id}}'}];
     layout.panels[0].data_layers[1].y_axis.min_extent = [0, significance_threshold*1.1];
