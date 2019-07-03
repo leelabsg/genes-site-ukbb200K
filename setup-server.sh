@@ -4,11 +4,17 @@ set -euo pipefail # notify of errors rather than ignoring them
 _readlinkf() { perl -MCwd -le 'print Cwd::abs_path shift' "$1"; }
 cd "$(dirname "$(_readlinkf "${BASH_SOURCE[0]}")")"
 
+
+if ! [ -e input_data/gene ]; then
+    echo "please populate input_data/gene/"
+    exit 1
+fi
+
 if ! [ -e genes-site/assoc.db ]; then
-    if [ -e input_data/gene ] && [ -e input_data/variant ]; then
+    if [ -e input_data/variant ]; then
        python3 genes-site/make_sqlite3_db.py
     else
-        echo "either populate input_data and run ./make_sqlite_db.py or copy assoc.db here"
+        echo "either populate input_data/variant/ and run ./make_sqlite_db.py or copy assoc.db here"
         exit 1
     fi
 fi
@@ -21,7 +27,7 @@ if ! [ -e genes-site/variant.db ]; then
     if [ -e input_data/variant ]; then
        python3 genes-site/make_variant_sqlite3_db.py
     else
-        echo "either populate input_data and run ./make_variant_sqlite_db.py or copy variant.db here"
+        echo "either populate input_data/variant/ and run ./make_variant_sqlite_db.py or copy variant.db here"
         exit 1
     fi
 fi
