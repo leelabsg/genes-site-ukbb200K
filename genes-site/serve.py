@@ -4,7 +4,7 @@ from io import BytesIO
 from gzip import GzipFile
 import sqlite3, re, itertools, json, math
 import zstandard
-from flask import g, Flask, jsonify, abort, render_template, request, url_for, redirect
+from flask import g, Flask, jsonify, abort, render_template, request, url_for, redirect, send_from_directory
 app = Flask(__name__)
 
 app.config['LZJS_VERSION'] = '0.9.1'
@@ -74,6 +74,12 @@ def assoc_page(genename, phecode):
                            genename=genename,
                            pval=m[0],num_rare=m[1], chrom=chrom,startpos=m[2],endpos=m[3], mac_case=m[4],mac_control=m[5])
 
+
+@app.route('/download/pheno/<phecode>')
+def download_pheno(phecode):
+    matches = list(get_db().execute('SELECT id FROM pheno WHERE phecode=?', (phecode,)))
+    if not matches: return abort(404)
+    return send_from_directory('../input_data/gene', 'result_gene_{}.txt.gz'.format(phecode), as_attachment=True)
 
 @app.route('/api/gene/<genename>')
 def gene_api(genename):
