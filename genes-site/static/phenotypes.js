@@ -20,7 +20,7 @@ $.getJSON('/static/phenotypes.json').then(function(data) {
                 {title: 'Best P-value', field:'best_pval', formatter:'2digit_fmt'},
             ],
             data: data,
-            initialSort: [{column:"num_sig_assocs", dir:"desc"}],
+            initialSort: [{column:"best_pval", dir:"asc"}],
             tooltipGenerationMode:'hover',tooltips:tabulator_tooltip_maker,tooltipsHeader:true,
         });
     });
