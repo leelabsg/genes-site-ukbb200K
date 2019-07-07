@@ -22,10 +22,10 @@
 {% block contained %}
 <div class="row">
     <div class="col-xs-12">
-        <h1 style="margin-top:0">{{ phecode }} + {{ genename }} </h1>
+        <h1 style="margin-top:0">{{genename}} + {{phecode}} ({{phenostring }})</h1>
         <p>
-          <a href="/pheno/{{ phecode }}" class="btn btn-primary">Go to pheno {{ phecode }}</a>
           <a href="/gene/{{ genename }}" class="btn btn-primary">Go to gene {{ genename }}</a>
+          <a href="/pheno/{{ phecode }}" class="btn btn-primary">Go to pheno {{ phecode }}</a>
         </p>
         <p>pval: <b>{{ pval }}</b></p>
         <p>Number of Rare Variants: <b>{{ num_rare }}</b></p>
