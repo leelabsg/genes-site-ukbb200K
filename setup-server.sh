@@ -59,7 +59,8 @@ fi
 if ! [ -e /etc/nginx/sites-enabled/genes-site ]; then
     sudo tee /etc/nginx/sites-available/genes-site >/dev/null <<END
 server {
-    listen 443;
+    listen 80;
+    server_name ukb-50kexome.leelabsg.org;
     location / {
         include proxy_params;
         proxy_pass http://localhost:8897;
