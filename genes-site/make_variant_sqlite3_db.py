@@ -71,9 +71,9 @@ db_tmp_filepath = db_filepath + '.tmp.db'
 if os.path.exists(db_tmp_filepath): os.unlink(db_tmp_filepath)
 conn = sqlite3.connect(db_tmp_filepath)
 with conn:
-    conn.execute('CREATE TABLE compression_dict (id INT PRIMARY KEY, data TEXT)')
+    conn.execute('CREATE TABLE compression_dict (id INT PRIMARY KEY, data BLOB)')
     conn.execute('INSERT INTO compression_dict (data) VALUES (?)', (zstd_dict.as_bytes(),))
-    conn.execute('CREATE TABLE variant_df (id INT PRIMARY KEY, phecode TEXT, genename TEXT, chrom TEXT, df TEXT)')
+    conn.execute('CREATE TABLE variant_df (id INT PRIMARY KEY, phecode TEXT, genename TEXT, chrom TEXT, df BLOB)')
     conn.executemany('INSERT INTO variant_df (phecode, genename, chrom, df) VALUES (?,?,?,?)', variant_df_gen())
     conn.execute('CREATE INDEX idx_variantdf_phecode_genename ON variant_df (phecode,genename)')
 print('finished ', db_tmp_filepath)
