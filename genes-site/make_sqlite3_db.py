@@ -59,8 +59,7 @@ for phecode in phecodes:
             else: assert genes[genename]['chrom'] == chrom
 print(len(genes), 'genes')
 
-# make mapping of (phecode, genename) -> pval
-# store in sqlite3 as table (pheno, genename, pval)
+# for each (phecode, genename) pair, get the pval and some other info.
 phecode_ids = {phecode: id_ for id_, phecode in enumerate(sorted(phecodes))}
 gene_ids = {genename: id_ for id_, genename in enumerate(sorted(genes))}
 def pheno_row_generator():
@@ -104,9 +103,26 @@ db_tmp_fname = db_fname + '.tmp.db'
 if os.path.exists(db_tmp_fname): os.unlink(db_tmp_fname)
 conn = sqlite3.connect(db_tmp_fname)
 with conn: # this commits insertions
-    conn.execute('create table pheno (id INT PRIMARY KEY, phecode TEXT, phenostring TEXT, category TEXT, num_cases INT, num_controls INT, phecode_exclude_range TEXT, phecode_exclude_description TEXT, sex TEXT)')
-    conn.execute('create table gene (id INT PRIMARY KEY, name TEXT, chrom TEXT)')
-    conn.execute('create table assoc (id INT PRIMARY KEY, pheno_id INT, gene_id INT, pval REAL, startpos INT, endpos INT, num_rare INT, mac_case REAL, mac_control REAL, FOREIGN KEY(pheno_id) REFERENCES pheno(id), FOREIGN KEY(gene_id) REFERENCES gene(id))')
+    conn.execute(
+        'create table pheno ('
+        'id INT PRIMARY KEY, '
+        'phecode TEXT, phenostring TEXT, category TEXT, '
+        'num_cases INT, num_controls INT, '
+        'phecode_exclude_range TEXT, phecode_exclude_description TEXT, sex TEXT)'
+    )
+    conn.execute(
+        'create table gene ('
+        'id INT PRIMARY KEY, '
+        'name TEXT, chrom TEXT)'
+    )
+    conn.execute(
+        'create table assoc ('
+        'id INT PRIMARY KEY, pheno_id INT, gene_id INT, '
+        'pval REAL, num_rare INT, startpos INT, endpos INT, '
+        'mac_case REAL, mac_control REAL, '
+        'FOREIGN KEY(pheno_id) REFERENCES pheno(id), '
+        'FOREIGN KEY(gene_id) REFERENCES gene(id))'
+    )
 
     conn.executemany('INSERT INTO pheno VALUES (?,?,?,?,?,?,?,?,?)', pheno_row_generator())
     conn.executemany('INSERT INTO gene VALUES (?,?,?)', gene_row_generator())
