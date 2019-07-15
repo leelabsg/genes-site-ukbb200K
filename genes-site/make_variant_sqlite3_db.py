@@ -27,7 +27,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 db_filepath = 'variant.db'
 
-phecodes = [row[0] for row in sqlite3.connect('assoc.db').execute('SELECT phecode FROM pheno')]
+phecodes = sorted(row[0] for row in sqlite3.connect('assoc.db').execute('SELECT phecode FROM pheno'))
 print('found', len(phecodes), 'phecodes')
 
 def get_genes_variantdata():
