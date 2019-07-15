@@ -23,6 +23,7 @@ file size comparison:
 
 import sqlite3, gzip, csv, os, itertools, json
 import zstandard
+from boltons.iterutils import pairwise_iter
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 db_filepath = 'variant.db'
@@ -36,22 +37,21 @@ def get_genes_variantdata():
         with gzip.open('../input_data/variant/result_singlevariant_{}.txt.gz'.format(phecode), 'rt') as f:
             rows = csv.DictReader(f, delimiter=' ')
             for genename,rowgroup in itertools.groupby(rows, key=lambda r:r['GeneName']):
-                # we use pos_delta instead of `pos` to try to save space
                 rows = sorted(rowgroup, key=lambda r:int(r['SNP'].split(':',2)[1])) # sort by pos
-                df = {key:[] for key in 'pos_delta base maf mac_case mac_control pval'.split()}
+                df = {key:[] for key in 'pos base maf mac_case mac_control pval'.split()}
                 chrom = rows[0]['SNP'].split(':')[0]
-                prev_pos = 0
                 for row in rows:
                     chrom_, pos_str, base = row['SNP'].split(':', 2)
                     assert chrom_ == chrom
-                    pos = int(pos_str); assert pos >= prev_pos, (pos, prev_pos)
-                    df['pos_delta'].append(pos - prev_pos)
-                    prev_pos = pos
+                    df['pos'].append(int(pos_str))
                     df['base'].append(base)
                     df['maf'].append(float(row['MAF']))
                     df['mac_case'].append(int(row['MAC_Case']))
                     df['mac_control'].append(int(row['MAC_Control']))
                     df['pval'].append(float(row['p.value']))
+                # To get better compression, replace df['pos'] with df['pos_delta'], which contains offsets from the previous value.
+                # The first position keeps its actual value (ie, its offset from zero).
+                df['pos_delta'] = [pos - previous_pos for previous_pos, pos in pairwise_iter([0]+df.pop('pos'))]
                 variant_data = json.dumps(df, separators=(',',':')).encode('utf8')
                 yield (phecode, genename, chrom, variant_data)
 
