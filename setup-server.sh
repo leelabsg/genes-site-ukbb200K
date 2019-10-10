@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script attempts to do all the work to host the site.  It expects to be on Ubuntu 18.04+ but likely also works on 16.04.
-set -euo pipefail # notify of errors rather than ignoring them
+set -euo pipefail # notify of errors (possibly via exit status code) rather than ignoring them
 _readlinkf() { perl -MCwd -le 'print Cwd::abs_path shift' "$1"; } # define a cross-platform version of `readlink -f`
 cd "$(dirname "$(_readlinkf "${BASH_SOURCE[0]}")")" # `cd` to the directory holding this script (which is the root of this git repo)
 
