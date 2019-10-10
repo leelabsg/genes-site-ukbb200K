@@ -1,10 +1,10 @@
 #!/bin/bash
 # This script attempts to do all the work to host the site.  It expects to be on Ubuntu 18.04+ but likely also works on 16.04.
 set -euo pipefail # notify of errors rather than ignoring them
-_readlinkf() { perl -MCwd -le 'print Cwd::abs_path shift' "$1"; }
-cd "$(dirname "$(_readlinkf "${BASH_SOURCE[0]}")")"
+_readlinkf() { perl -MCwd -le 'print Cwd::abs_path shift' "$1"; } # define a cross-platform version of `readlink -f`
+cd "$(dirname "$(_readlinkf "${BASH_SOURCE[0]}")")" # `cd` to the directory holding this script (which is the root of this git repo)
 
-
+# Check that needed data is present.  If a missing file can be generated from other files, do that.
 if ! [ -e input_data/gene ]; then
     echo "please populate input_data/gene/"
     exit 1
@@ -32,12 +32,14 @@ if ! [ -e genes-site/variant.db ]; then
     fi
 fi
 
+# Install dependencies
 if ! [ -e venv ]; then
     sudo apt update && sudo apt install python3-pip python3-venv nginx
     python3 -m venv venv
     ./venv/bin/pip3 install -r requirements.txt
 fi
 
+# Make a Systemd Unit file that runs gunicorn to host the site (available only locally on this machine)
 if ! [ -e /etc/systemd/system/gunicorn-genes-site.service ]; then
     sudo tee /etc/systemd/system/gunicorn-genes-site.service >/dev/null <<END
 [Unit]
@@ -56,6 +58,7 @@ END
     sudo systemctl enable gunicorn-genes-site
 fi
 
+# Make nginx reverse-proxy the local-only gunicorn port to an externally-accessible subdomain
 if ! [ -e /etc/nginx/sites-enabled/genes-site ]; then
     sudo tee /etc/nginx/sites-available/genes-site >/dev/null <<END
 server {
@@ -72,6 +75,7 @@ END
     sudo systemctl restart nginx
 fi
 
+# Restart gunicorn to apply any changes
 sudo systemctl restart gunicorn-genes-site
 
 echo SUCCESS
