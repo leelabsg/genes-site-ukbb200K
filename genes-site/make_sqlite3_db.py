@@ -40,7 +40,7 @@ for phecode in phecodes: assert phecode in phenos, phecode
 assert 2 <= len(set(p['category'] for p in phenos.values())) < 100
 for phecode, pheno in phenos.items():
     with gzip.open('../input_data/gene/result_gene_{}.txt.gz'.format(phecode), 'rt') as f:
-        for row in csv.DictReader(f, delimiter=' '):
+        for row in csv.DictReader(f, delimiter='\t'):
             pheno['num_cases'] = int(row['Case'])
             pheno['num_controls'] = int(row['Control'])
             break
@@ -52,7 +52,7 @@ for phecode in phecodes:
     with gzip.open('../input_data/gene/result_gene_{}.txt.gz'.format(phecode), 'rt') as f:
         f.readline() # eat the header
         for line in f:
-            genename, start, _ = line.split(' ',2)
+            genename, start, _ = line.split('\t',2)
             chrom = start.split(':',1)[0]
             assert chrom.isdigit() or chrom
             if genename not in genes: genes[genename] = {'chrom':chrom}
@@ -82,7 +82,7 @@ def assoc_row_generator(): # doesn't output primary key, let's sqlite3 auto-incr
             assert f.readline().strip().split() == 'GeneName Start_Pos End_Pos NumofRareVariants MAC_Case MAC_Control Case Control p.value'.split()
             for line in f:
                 try:
-                    genename, start, end, num_rare_str, mac_case_str, mac_control_str, num_cases_str, num_controls_str, pval_str = line.strip().split(' ')
+                    genename, start, end, num_rare_str, mac_case_str, mac_control_str, num_cases_str, num_controls_str, pval_str = line.strip().split('\t')
                     assert genename in genes, line
                     chrom = start.split(':',1)[0]
                     startpos = int(start.split(':',2)[1])

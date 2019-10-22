@@ -34,7 +34,7 @@ def get_genes_variantdata():
     for i,phecode in enumerate(phecodes):
         print(' - reading pheno#{}: {}'.format(i, phecode))
         with gzip.open('../input_data/variant/result_singlevariant_{}.txt.gz'.format(phecode), 'rt') as f:
-            rows = csv.DictReader(f, delimiter=' ')
+            rows = csv.DictReader(f, delimiter='\t')
             for genename,rowgroup in itertools.groupby(rows, key=lambda r:r['GeneName']):
                 rows = sorted(rowgroup, key=lambda r:int(r['SNP'].split(':',2)[1])) # sort by pos
                 df = {key:[] for key in 'pos base maf mac_case mac_control pval'.split()}
