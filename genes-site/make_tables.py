@@ -25,7 +25,7 @@ for row in conn.execute('SELECT * FROM gene'):
         best_pval=999, best_assoc=None, num_sig_assocs=0)
 
 for i, row in enumerate(conn.execute('SELECT * FROM assoc')):
-    if i % 1_000_000 == 0: print(i)
+    if i % int(1e6) == 0: print(i)
     pval = row['pval']
     pheno = pheno_by_id[row['pheno_id']]
     gene = gene_by_id[row['gene_id']]
