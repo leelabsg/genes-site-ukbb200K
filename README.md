@@ -13,7 +13,7 @@
          - eg, `A3GALT2 1:33306784:I:6 1.1e-04 0 5 8.3e-01`
    - `input_data/phenotype-info.csv` (already included in repo)
 
-3. run `pip3 install -r requirments.txt`
+3. run `python3 -m pip install -r requirements.txt` (or, if running for only your own user, `python3 -m pip --user install -r requirements.txt`)
 
 4. run `python3 make_sqlite3_db.py` to produce `assoc.db`
 
