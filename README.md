@@ -15,7 +15,7 @@
 
 3. run `python3 -m pip install -r requirements.txt` (or, if running for only your own user, `python3 -m pip --user install -r requirements.txt`)
 
-4. run `python3 make_sqlite3_db.py` to produce `assoc.db`
+4. run `python3 make_sqlite3_db.py` (inside the `genes-site` subdirectory) to produce `assoc.db`
 
 5. run `python3 make_tables.py` to produce `static/phenotypes.json` and `static/genes.json`
 
