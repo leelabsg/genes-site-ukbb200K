@@ -37,7 +37,7 @@ def get_genes_variantdata():
             rows = csv.DictReader(f, delimiter='\t')
             for genename,rowgroup in itertools.groupby(rows, key=lambda r:r['GeneName']):
                 rows = sorted(rowgroup, key=lambda r:int(r['SNP'].split(':',2)[1])) # sort by pos
-                df = {key:[] for key in 'pos base maf mac_case mac_control pval'.split()}
+                df = {key:[] for key in 'pos base maf mac_case mac_control pval annotation'.split()}
                 chrom = rows[0]['SNP'].split(':')[0]
                 for row in rows:
                     chrom_, pos_str, base = row['SNP'].split(':', 2)
@@ -48,6 +48,7 @@ def get_genes_variantdata():
                     df['mac_case'].append(float(row['MAC_Case']))
                     df['mac_control'].append(float(row['MAC_Control']))
                     df['pval'].append(float(row['p.value']))
+                    df['annotation'].append(row['Annotation'])
                 # To get better compression, replace df['pos'] with df['pos_delta'], which contains offsets from the previous value.
                 # The first position keeps its actual value (ie, its offset from zero).
                 df['pos_delta'] = [pos - previous_pos for previous_pos, pos in pairwise_iter([0]+df.pop('pos'))]
