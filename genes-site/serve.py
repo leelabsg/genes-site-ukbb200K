@@ -157,7 +157,7 @@ class VariantFetcher:
         if len(matches) != 1: raise Exception('VariantFetcher got {} matches: {}'.format(len(matches), repr(matches)))
         m = matches[0]
         decompressed = self.zstd_decompressor.decompress(m['df'])
-        df = json.loads(decompressed)
+        df = json.loads(decompressed.decode('ascii'))
         return dict(phecode=m['phecode'], genename=m['genename'], chrom=m['chrom'], df=df)
 
 
