@@ -45,8 +45,8 @@ def get_genes_variantdata():
                     df['pos'].append(int(pos_str))
                     df['base'].append(base)
                     df['maf'].append(float(row['MAF']))
-                    df['mac_case'].append(int(row['MAC_Case']))
-                    df['mac_control'].append(int(row['MAC_Control']))
+                    df['mac_case'].append(float(row['MAC_Case']))
+                    df['mac_control'].append(float(row['MAC_Control']))
                     df['pval'].append(float(row['p.value']))
                 # To get better compression, replace df['pos'] with df['pos_delta'], which contains offsets from the previous value.
                 # The first position keeps its actual value (ie, its offset from zero).
