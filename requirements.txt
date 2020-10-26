@@ -1,5 +1,5 @@
-Flask==1.0.2
-gunicorn==19.9.0
-gevent==1.4.0
-zstandard==0.11.1
-boltons==19.1.0
+Flask==1.1.2
+gunicorn==20.0.4
+gevent==20.9.0
+zstandard==0.14.0
+boltons==20.2.1
