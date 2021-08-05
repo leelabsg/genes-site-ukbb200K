@@ -56,8 +56,8 @@ ExecStart=$PWD/venv/bin/gunicorn -k gevent -w4 --bind localhost:8896 serve:app
 WantedBy=multi-user.target
 END
     sudo systemctl daemon-reload
-    sudo systemctl start gunicorn-genes-site
-    sudo systemctl enable gunicorn-genes-site
+    sudo systemctl start gunicorn-genes-site-ukbb200K
+    sudo systemctl enable gunicorn-genes-site-ukbb200K
 fi
 
 # Make nginx reverse-proxy the local-only gunicorn port to an externally-accessible subdomain
@@ -72,12 +72,12 @@ server {
     }
 }
 END
-    sudo ln -s /etc/nginx/sites-available/genes-site /etc/nginx/sites-enabled/
+    sudo ln -s /etc/nginx/sites-available/genes-site-ukbb200K /etc/nginx/sites-enabled/
     sudo nginx -t # check that the file is good
     sudo systemctl restart nginx
 fi
 
 # Restart gunicorn to apply any changes
-sudo systemctl restart gunicorn-genes-site
+sudo systemctl restart gunicorn-genes-site-ukbb200K
 
 echo SUCCESS
