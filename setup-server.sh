@@ -18,7 +18,7 @@ cd "$(dirname "$(_readlinkf "${BASH_SOURCE[0]}")")" # `cd` to the directory hold
     # else
         # echo "either populate input_data/variant/ and run ./make_sqlite_db.py or copy assoc.db here"
         # exit 1
-    # fi
+    # fi 
 # fi
 
 # if ! [ -e genes-site/static/phenotypes.json ] || ! [ -e genes-site/static/genes.json ]; then
