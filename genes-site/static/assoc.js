@@ -93,7 +93,6 @@ $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp)
                             "{{namespace[assoc]}}pvalue|neglog10_or_100",
                             "{{namespace[assoc]}}pvalue|scinotation",
                             "{{namespace[assoc]}}maf|scinotation", "{{namespace[assoc]}}mac_case", "{{namespace[assoc]}}mac_control",
-                            "{{namespace[assoc]}}annotation",
                             "{{namespace[ld]}}state", "{{namespace[ld]}}isrefvar",
                             "{{namespace[catalog]}}rsid", "{{namespace[catalog]}}trait", "{{namespace[catalog]}}log_pvalue"
                         ],
@@ -111,7 +110,6 @@ $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp)
                                 "MAF: <strong>{{{{namespace[assoc]}}maf|scinotation}}</strong><br>" +
                                 "Case MAC: <strong>{{{{namespace[assoc]}}mac_case}}</strong><br>" +
                                 "Control MAC: <strong>{{{{namespace[assoc]}}mac_control}}</strong><br>" +
-                                "Annotation: <strong>{{{{namespace[assoc]}}annotation}}</strong><br>" +
                                 "{{#if {{namespace[catalog]}}rsid}}<br><a href=\"https://www.ebi.ac.uk/gwas/search?query={{{{namespace[catalog]}}rsid}}\" target=\"_new\">See hits in GWAS catalog</a>{{/if}}" +
                                 "<br><a href=\"javascript:void(0);\" onclick=\"LocusZoom.getToolTipDataLayer(this).makeLDReference(LocusZoom.getToolTipData(this));\">Make LD Reference</a>"
                         },
@@ -186,7 +184,6 @@ $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp)
                 {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
                 {title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
                 {title: 'P-value', field:'pval', formatter:'2digit_fmt'},
-                {title: 'Annotation', field:'annotation'},
             ],
             data: data,
             initialSort: [{column:'pval', dir:'asc'}],

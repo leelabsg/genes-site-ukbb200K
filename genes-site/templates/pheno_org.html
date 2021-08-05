@@ -58,7 +58,7 @@
     <div class="col-xs-12 col-sm-8">
         <h1 style="margin-top:0">{{ phecode }}: {{ phenostring }}</h1>
         <p>Category: <b>{{ category }}</b></p>
-		<p>Sample Size: <b>{{ sample_size }}</b></p>
+        <p>Number of Cases / Controls: <b>{{"{:,}".format(num_cases)}} / {{"{:,}".format(num_controls)}}</b></p>
         <p>Showing the top 1000 genes</p>
     </div>
     <div class="col-xs-12 col-sm-4">

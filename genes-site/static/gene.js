@@ -31,9 +31,9 @@ $.getJSON('/api/gene/'+model.genename).then(function(resp) {
 
     layout.panels[0].data_layers[0].offset = significance_threshold;
     layout.panels[0].data_layers[1].fields.push('phewas:phenostring');
-    layout.panels[0].data_layers[1].fields.push('phewas:num_rare');
+    //layout.panels[0].data_layers[1].fields.push('phewas:num_rare');
     layout.panels[0].data_layers[1].fields.push('phewas:startpos', 'phewas:endpos');
-    layout.panels[0].data_layers[1].fields.push('phewas:mac_case', 'phewas:mac_control');
+    //layout.panels[0].data_layers[1].fields.push('phewas:mac_case', 'phewas:mac_control');
     layout.panels[0].data_layers[1].fields.push('phewas:num_cases', 'phewas:num_controls');
     layout.panels[0].data_layers[1].tooltip.html =
         ("<strong>{{phewas:trait_label|htmlescape}}</strong><br>" +
@@ -77,13 +77,13 @@ $.getJSON('/api/gene/'+model.genename).then(function(resp) {
                 {title: 'Category', field:'category', headerFilter:true, widthGrow:1},
                 {title: 'Code', field:'phecode', formatter:'link', formatterParams: { urlPrefix: '/assoc/'+model.genename+'/' }, headerFilter:true},
                 {title: 'Name', field:'phenostring', formatter:'link', formatterParams: { url: function(cell){return '/assoc/'+model.genename+'/'+cell.getData().phecode;}}, headerFilter:true, widthGrow:2},
-                {title: '#Cases', field:'num_cases', formatter:'comma_fmt'},
-                {title: '#Controls', field:'num_controls', formatter:'comma_fmt'},
+                {title: 'Sample Size', field:'sample_size'},
+                //{title: '#Controls', field:'num_controls', formatter:'comma_fmt'},
                 {title: 'P-value', field:'pval', formatter:'2digit_fmt'},
-                {title: '#Rare Variants', field:'num_rare', formatter:'comma_fmt'},
+                //{title: '#Rare Variants', field:'num_rare', formatter:'comma_fmt'},
                 {title: 'Start-End', field:'startpos', formatter: function(cell){return cell.getValue().toLocaleString()+' - '+cell.getData().endpos.toLocaleString()}, widthGrow:1},
-                {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
-                {title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
+                //{title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
+                //{title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
             ],
             data: data,
             initialSort: [{column:'pval', dir:'asc'}],

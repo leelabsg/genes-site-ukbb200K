@@ -23,11 +23,11 @@ $.getJSON('/api/pheno/'+model.phecode).then(function(resp) {
             columns: [
                 {title: 'Gene', field:'name', formatter:'link', formatterParams: {url:function(cell){return '/assoc/'+cell.getValue()+'/'+model.phecode}}, headerFilter:true, widthGrow:3},
                 {title: 'P-value', field:'pval', formatter:'2digit_fmt'},
-                {title: '#Rare Variants', field:'num_rare', formatter:'comma_fmt'},
+                //{title: '#Rare Variants', field:'num_rare', formatter:'comma_fmt'},
                 {title: 'Chromosome', field:'chrom', headerFilter:true, headerFilterFunc:'='},
                 {title: 'Start-End', field:'startpos', formatter:function(cell){return cell.getValue().toLocaleString()+' - '+cell.getData().endpos.toLocaleString()}, widthGrow:2},
-                {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
-                {title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
+                //{title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
+                //{title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
             ],
             data: data,
             initialSort: [{column:'pval', dir:'asc'}],
@@ -279,8 +279,8 @@ function create_gwas_plot(variant_bins, unbinned_variants, significance_threshol
             '<%= d.name %>',
             'Chr<%= d.chrom %> : <%= d.startpos.toLocaleString() %> - <%= d.endpos.toLocaleString() %>',
             'P-value: <%= d.pval.toExponential(1) %>',
-            '#Rare Variants: <%= d.num_rare %>',
-            'Case / Control MAC: <%= d.mac_case %> / <%= d.mac_control %>',
+            //'#Rare Variants: <%= d.num_rare %>',
+            //'Case / Control MAC: <%= d.mac_case %> / <%= d.mac_control %>',
         ].join('<br>'));
         var point_tooltip = d3.tip()
             .attr('class', 'd3-tip')

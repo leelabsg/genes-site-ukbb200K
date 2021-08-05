@@ -10,9 +10,7 @@ app = Flask(__name__)
 app.config['LZJS_VERSION'] = '0.9.1'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 60*5
 
-# change by SLEE
-DATABASE = 'assoc_new.db'
-#
+DATABASE = 'assoc.db'
 def get_db():
     db = getattr(g, '_database', None)
     if db is None: db = g._database = sqlite3.connect(DATABASE)
@@ -28,19 +26,7 @@ def get_df(query, args=()):
     rows = cur.fetchall()
     cur.close()
     return {colname: [row[i] for row in rows] for i, colname in enumerate(colnames)}
-def get_samplesize(num_case, num_control):
-    samplesize = str(num_case)
-    if( num_control != None ):
-        samplesize += ':' + str(num_control)
-    return samplesize
-    
-def get_samplesizes(num_cases, num_controls):
-    samplesizes = []
-    for n0,n1 in zip(num_cases,num_controls):
-        sample_item = get_samplesize(n0, n1)
-        samplesizes.append(sample_item)
-    return samplesizes
-        
+
 @app.route('/')
 def index_page():
     return render_template('index.html')
@@ -66,35 +52,28 @@ def pheno_page(phecode):
     matches = list(get_db().execute('SELECT phenostring,category,num_cases,num_controls FROM pheno WHERE phecode=?', (phecode,)))
     if not matches: return abort(404)
     phenostring, category, num_cases, num_controls = matches[0]
-    sample_size = get_samplesize(num_cases,num_controls)
-    return render_template('pheno.html', phecode=phecode, phenostring=phenostring, category=category, sample_size=sample_size)
+    return render_template('pheno.html', phecode=phecode, phenostring=phenostring, category=category, num_cases=num_cases, num_controls=num_controls)
 
 @app.route('/assoc/<genename>/<phecode>')
 def assoc_page(genename, phecode):
     matches = list(get_db().execute('SELECT id,phenostring,category,num_cases,num_controls FROM pheno WHERE phecode=?', (phecode,)))
     if not matches: return abort(404)
     pheno_id, phenostring, category, num_cases, num_controls = matches[0]
-    sample_size = get_samplesize(num_cases,num_controls)
-    
+
     matches = list(get_db().execute('SELECT id,chrom FROM gene WHERE name = ?', (genename,)))
     if not matches: return abort(404)
     gene_id,chrom = matches[0]
 
-    matches = list(get_db().execute('SELECT pval,num_rare, startpos,endpos, assoc.id FROM assoc '
+    matches = list(get_db().execute('SELECT pval,num_rare, startpos,endpos, mac_case,mac_control FROM assoc '
                                     'LEFT JOIN gene ON assoc.gene_id=gene.id '
                                     'WHERE pheno_id=? AND gene_id=?', (pheno_id, gene_id)))
     if not matches: return abort(404)
     m = matches[0]
     return render_template('assoc.html',
                            phecode=phecode, phenostring=phenostring, category=category, num_cases=num_cases, num_controls=num_controls,
-                           sample_size=sample_size,
                            genename=genename,
-                           pval=m[0],num_rare=m[1], chrom=chrom,startpos=m[2],endpos=m[3], associd =m[4])
+                           pval=m[0],num_rare=m[1], chrom=chrom,startpos=m[2],endpos=m[3], mac_case=m[4],mac_control=m[5])
 
-@app.route('/api/assocgroup/<associd>')
-def assocgroup_page(associd):
-    df = get_df('SELECT description, pval FROM assoc_group WHERE assoc_id=?', (associd,))
-    return jsonify(dict(assocgroup=df))
 
 @app.route('/download/pheno/<phecode>')
 def download_pheno(phecode):
@@ -107,12 +86,10 @@ def gene_api(genename):
     matches = list(get_db().execute('SELECT id FROM gene WHERE name = ?', (genename,)))
     if not matches: return abort(404)
     gene_id = matches[0][0]
-    df = get_df('SELECT phecode,phenostring,category,pval,startpos,endpos,num_cases,num_controls FROM assoc '
+    df = get_df('SELECT phecode,phenostring,category,pval,startpos,endpos,num_rare,mac_case,mac_control,num_cases,num_controls FROM assoc '
                 'LEFT JOIN pheno ON assoc.pheno_id=pheno.id '
                 'WHERE gene_id=? '
                 'ORDER BY phecode', (gene_id,))
-    sample_size = get_samplesizes(df['num_cases'], df['num_controls'])
-    df['sample_size'] = sample_size
     return jsonify(dict(assocs=df))
 
 @app.route('/api/pheno/<phecode>')
@@ -121,25 +98,15 @@ def pheno_api(phecode):
     if not matches: return abort(404)
     pheno_id = matches[0][0]
     num_genes = list(get_db().execute('SELECT COUNT(*) FROM assoc WHERE pheno_id=? ', (pheno_id,)))[0][0]
-    # change by SLEE, remove num_rare, mac_case, mac_control..
-    df = get_df('SELECT name,pval,startpos,endpos,chrom FROM assoc '
+    df = get_df('SELECT name,pval,startpos,endpos,num_rare,mac_case,mac_control,chrom FROM assoc '
                 'LEFT JOIN gene ON assoc.gene_id=gene.id '
                 'WHERE pheno_id=? '
                 'ORDER BY pval', (pheno_id,))
-                
-    ##SLEE remove character after _ (in refseq)
-    chrom_new =[]
-    for chrom_item in df['chrom']:
-        chrom_new.append(chrom_item.split("_",1)[0])
-    df['chrom'] = chrom_new
-    ####
-    #print(df['pval'][999:1002])
+    print(df['pval'][999:1002])
     unbinned, manhattan_bins = make_manhattan_bins(df)
     return jsonify(dict(assocs=unbinned, manhattan_bins=manhattan_bins, num_genes=num_genes))
 def make_manhattan_bins(df):
-    #SLEE, remove num_rare, mac_case, mac_control 
-    #assert set(df.keys()) == set('name pval startpos endpos num_rare mac_case mac_control chrom'.split())
-    assert set(df.keys()) == set('name pval startpos endpos chrom'.split())
+    assert set(df.keys()) == set('name pval startpos endpos num_rare mac_case mac_control chrom'.split())
     unbinned = {key:values[:1000] for key,values in df.items()}
     # objs_to_bin = [{key:df[key][i] for key in df.keys()} for i in range(1000, len(df['pval']))]
     # objs_to_bin.sort(key=lambda x:x['
@@ -190,7 +157,7 @@ class VariantFetcher:
         if len(matches) != 1: raise Exception('VariantFetcher got {} matches: {}'.format(len(matches), repr(matches)))
         m = matches[0]
         decompressed = self.zstd_decompressor.decompress(m['df'])
-        df = json.loads(decompressed)
+        df = json.loads(decompressed.decode('ascii'))
         return dict(phecode=m['phecode'], genename=m['genename'], chrom=m['chrom'], df=df)
 
 
@@ -198,7 +165,7 @@ class Autocompleter:
     def __init__(self):
         phenos_df = get_df('SELECT phecode,phenostring FROM pheno')
         self.phenos = [{key: phenos_df[key][i] for key in phenos_df} for i in range(len(next(iter(phenos_df.values()))))]
-        #self.phenos.sort(key=lambda p:float(p['phecode']))
+        self.phenos.sort(key=lambda p:float(p['phecode']))
         for p in self.phenos: p['phenostring--processed'] = self.process_string(p['phenostring'])
         genenames = sorted(get_df('SELECT name FROM gene')['name'])
         self.genes = [{'genename': name} for name in genenames]
