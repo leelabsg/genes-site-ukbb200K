@@ -6,7 +6,7 @@ cd "$(dirname "$(_readlinkf "${BASH_SOURCE[0]}")")"
 git pull --ff-only
 echo
 
-sudo systemctl restart gunicorn-genes-site
+sudo systemctl restart genes-site-ukbb200K
 echo
 
 echo SUCCESSFUL UPDATE
