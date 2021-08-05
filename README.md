@@ -1,4 +1,13 @@
 ### Usage
+Modified for UKBB200K SAIGE-GENE+ output. Database files are directly generated using data_process.R file. 
+
+1. Run data_process.R to generate assoc_new.db file. For this, you need SAIGE-GENE+ output file, previous assoc.db (UKBB 50K analysis results) and refseq annotation file. 
+
+2. Run `python3 make_tables.py` to produce `static/phenotypes.json` and `static/genes.json`
+
+3. Run the server (see below)
+
+### OLD Usage
 
 1. Clone this repository (with `git clone`)
 
