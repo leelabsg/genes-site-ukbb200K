@@ -50,7 +50,7 @@ After=network.target
 [Service]
 User=nobody
 Group=nogroup
-WorkingDirectory=$PWD/genes-site-ukbb200K/
+WorkingDirectory=$PWD/genes-site/
 ExecStart=$PWD/venv/bin/gunicorn -k gevent -w4 --bind localhost:8896 serve:app
 [Install]
 WantedBy=multi-user.target
