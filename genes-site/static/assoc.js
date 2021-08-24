@@ -184,6 +184,7 @@ $.getJSON('/api/variants/'+model.genename+'/'+model.phecode).then(function(resp)
                 {title: 'Case MAC (Minor Allele Count)', field:'mac_case'},
                 {title: 'Control MAC (Minor Allele Count)', field:'mac_control'},
                 {title: 'P-value', field:'pval', formatter:'2digit_fmt'},
+                {title: 'Annotation', field:'annotation'},
             ],
             data: data,
             initialSort: [{column:'pval', dir:'asc'}],

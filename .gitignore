@@ -6,3 +6,6 @@ phenotypes.json
 gene/
 variant/
 venv/
+input_data/
+phenotype-info.csv
+genes-site/extra/

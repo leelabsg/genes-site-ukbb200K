@@ -133,9 +133,15 @@ dbExecute(mydb_new,
           'create table assoc_group (
           id INT PRIMARY KEY, assoc_id INT, 
           description TEXT,
-          pval REAL, 
+          pval REAL,
+	  mac TEXT,
+	  rarevariants INT,
+	  ultra_rarevariants INT,
+	  pval_collapsed_ultrarare REAL,
           FOREIGN KEY(assoc_id) REFERENCES assoc(id))'
 )
+
+
 
 dbExecute(mydb_new,
           'create INDEX idx_assoc_id on assoc_group(assoc_id)'
@@ -163,19 +169,32 @@ Group_Name<-substr(colnames(dat)[IDX_group_p], 9, 1000)
 gene_id_next = 1
 gene_group_id_next=1
 
+otherInfo=fread("/net/csgspare3/snowwhite.archive/zczhao/SAIGE-GENE-UPDATE/realdata/step2/output_single/missenseLofSyn/formatForPheWeb/output_gene/merged/phenogene_otherinfo_format.txt", header=T, data.table=F)
+
 for(i in 1:nrow(Pinfo)){
   print(i) 
   if(i==1){
     gene_id_next = 1
     gene_group_id_next=1  
   }
+
   code = Pinfo$OrgCode[i]
+  if(code == "X20001_1002" | code == "X20001_1044"){
+    code0 = paste0(code,"_sexSpecific")	
+  }else{
+    code0=code
+  }	  
+
   dat1 = dat[dat$pheno_code == code]
+  traitType = dat1$pheno_group[1]
+
   dat2 = merge(dat1, Ginfo, by.x="Gene", by.y="name")
-  
+  dat3 = otherInfo[which(otherInfo$Pheno == code0),]
   #startpos = sprintf("%s:%d", dat2$chrom, dat2$startpos)
   #endpos = sprintf("%s:%d", dat2$chrom, dat2$endpos)
-  
+  dat3b = merge(dat2, dat3, by.x="Gene", by.y="GeneName")
+  dat2 = dat3b
+
   n1<-nrow(dat2)
   #id INT PRIMARY KEY, pheno_id INT, gene_id INT, pval REAL, num_rare INT, startpos INT, endpos INT, 
   assoc_df = data.frame(id = gene_id_next:(gene_id_next+ n1 -1),
@@ -189,12 +208,78 @@ for(i in 1:nrow(Pinfo)){
     MAT<-cbind(MAT, dat2[[IDX_group_p[j]]])
   }
   Pval_vec<-as.vector(t(MAT))
+
+
+  #cName=paste0("MACcase_", Group_Name)
+  #MAT<-NULL
+  #for(j in 1:length(Group_Name)){
+  #  MAT<-cbind(MAT, dat2[[cName[j]]])
+  #}
+  #MACcase_vec<-as.vector(t(MAT))
+
+  #cName=paste0("MACcontrol_", Group_Name)
+  #MAT<-NULL
+  #for(j in 1:length(Group_Name)){
+  #  MAT<-cbind(MAT, dat2[[cName[j]]])
+  #}
+  #MACcontrol_vec<-as.vector(t(MAT))
+
+
+  cName1=paste0("MACcase_", Group_Name)
+  cName2=paste0("MACcontrol_", Group_Name)
+  MAT<-NULL
+  if(traitType == "quantitative"){
+    for(j in 1:length(Group_Name)){
+      MAT<-cbind(MAT, dat2[[cName1[j]]])
+    }
+  }else{	  
+    for(j in 1:length(Group_Name)){
+      MACcol = paste0(dat2[[cName1[j]]], ":", dat2[[cName2[j]]])
+      MAT<-cbind(MAT, MACcol)
+    }	    
+  }
+  MAC_vec = as.vector(t(MAT))
+
+	  
+  cName=paste0("NumofRareVariants_", Group_Name)
+  MAT<-NULL
+  for(j in 1:length(Group_Name)){
+    MAT<-cbind(MAT, dat2[[cName[j]]])
+  }
+  NumofRareVariants_vec<-as.vector(t(MAT))
+
+
+  cName=paste0("NumofUltraRareVariants_", Group_Name)
+  MAT<-NULL
+  for(j in 1:length(Group_Name)){
+    MAT<-cbind(MAT, dat2[[cName[j]]])
+  }
+  NumofUltraRareVariants_vec<-as.vector(t(MAT))
+
+
+  cName=paste0("UltraRareP_", Group_Name)
+  MAT<-NULL
+  for(j in 1:length(Group_Name)){
+    MAT<-cbind(MAT, dat2[[cName[j]]])
+  }
+  UltraRareP_vec<-as.vector(t(MAT))
+
+
+
+
+
   #id INT PRIMARY KEY, assoc_id INT, description TEXT, pval REAL, 
   n1_group = n1*N_group
   assoc_group_df = data.frame(id = gene_group_id_next:(gene_group_id_next+ n1_group-1), 
                                assoc_id = rep(assoc_df$id, each=N_group), 
                                description = rep(Group_Name, n1),
-                               pval = Pval_vec)
+                               pval = Pval_vec, 
+			       #mac_case = MACcase_vec,
+			       #mac_control = MACcontrol_vec,
+			       mac = MAC_vec,
+			       rarevariants = NumofRareVariants_vec,
+			       ultra_rarevariants = NumofUltraRareVariants_vec,
+			       pval_collapsed_ultrarare = UltraRareP_vec)
   
   gene_id_next= gene_id_next+ n1 
   gene_group_id_next =  gene_group_id_next+ n1_group

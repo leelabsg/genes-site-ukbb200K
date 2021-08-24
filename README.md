@@ -1,3 +1,13 @@
+### Usage modified by wz
+Modified for UKBB200K SAIGE-GENE+ output. Database files are directly generated using data_process.R file.
+
+1. Run data_process_NEW.R to generate assoc_new.db file. For this, you need SAIGE-GENE+ output files (one for overall p-value, one for assoc results for collapsed ultra rare variants by annotations and MAF), and refseq annotation file.
+
+2. Run `python3 make_tables.py` to produce `static/phenotypes.json` and `static/genes.json`
+
+3. Run the server (see below)
+
+
 ### Usage
 Modified for UKBB200K SAIGE-GENE+ output. Database files are directly generated using data_process.R file. 
 

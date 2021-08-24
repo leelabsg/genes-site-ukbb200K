@@ -16,10 +16,10 @@ assert round_sig(0.00123, 2) == 0.0012
 assert round_sig(1.59e-10, 2) == 1.6e-10
 
 # make list of phenotypes
-filenames = os.listdir('../input_data/gene')
-for fname in filenames: assert re.match(r'result_gene_([0-9]{3,4}(?:\.[0-9]{1,2})?).txt.gz$', fname), fname
-phecodes = set(re.match(r'result_gene_([0-9]{3,4}(?:\.[0-9]{1,2})?).txt.gz$', fname).group(1) for fname in filenames)
-print(len(phecodes), 'phecodes')
+#filenames = os.listdir('../input_data/gene')
+#for fname in filenames: assert re.match(r'result_gene_([0-9]{3,4}(?:\.[0-9]{1,2})?).txt.gz$', fname), fname
+#phecodes = set(re.match(r'result_gene_([0-9]{3,4}(?:\.[0-9]{1,2})?).txt.gz$', fname).group(1) for fname in filenames)
+#print(len(phecodes), 'phecodes')
 # also check variant files
 filenames_for_variants = os.listdir('../input_data/variant')
 for fname in filenames_for_variants: assert re.match(r'result_singlevariant_([0-9]{3,4}(?:\.[0-9]{1,2})?).txt.gz$', fname), fname

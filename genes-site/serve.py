@@ -92,9 +92,16 @@ def assoc_page(genename, phecode):
                            pval=m[0],num_rare=m[1], chrom=chrom,startpos=m[2],endpos=m[3], associd =m[4])
 
 @app.route('/api/assocgroup/<associd>')
-def assocgroup_page(associd):
-    df = get_df('SELECT description, pval FROM assoc_group WHERE assoc_id=?', (associd,))
+def assocgroup_api(associd):
+    df = get_df('SELECT description, pval, mac, rarevariants, ultra_rarevariants, pval_collapsed_ultrarare  FROM assoc_group WHERE assoc_id=?', (associd,))
     return jsonify(dict(assocgroup=df))
+
+#added by WZ to have a seperate page for association rsuults by annotations
+@app.route('/assocgroup/<associd>')
+def assocgroup_page(associd):
+    matches = list(get_db().execute('SELECT description, pval, mac, rarevariants, ultra_rarevariants, pval_collapsed_ultrarare  FROM assoc_group WHERE assoc_id=?', (associd,)))
+    if not matches: return abort(404)
+    return render_template('assocgroup.html', associd = associd)
 
 @app.route('/download/pheno/<phecode>')
 def download_pheno(phecode):
@@ -190,7 +197,8 @@ class VariantFetcher:
         if len(matches) != 1: raise Exception('VariantFetcher got {} matches: {}'.format(len(matches), repr(matches)))
         m = matches[0]
         decompressed = self.zstd_decompressor.decompress(m['df'])
-        df = json.loads(decompressed)
+        #df = json.loads(decompressed)
+        df = json.loads(decompressed.decode('ascii'))
         return dict(phecode=m['phecode'], genename=m['genename'], chrom=m['chrom'], df=df)
 
 

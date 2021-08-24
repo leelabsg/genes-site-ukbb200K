@@ -9,6 +9,7 @@ import sqlite3, json, os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 conn = sqlite3.connect('assoc_new.db')
+#conn = sqlite3.connect('assoc.db')
 conn.row_factory = sqlite3.Row
 
 def get_samplesize(num_case, num_control):
