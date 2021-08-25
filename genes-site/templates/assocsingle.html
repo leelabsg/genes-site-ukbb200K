@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+
+{% block in_head %}
+<script type="text/javascript">
+  window.model.phecode = {{ phecode|tojson(separators=(',',':'))|safe }};
+  window.model.genename = {{ genename|tojson(separators=(',',':'))|safe }};
+</script>
+
+<link href="https://cdn.jsdelivr.net/npm/locuszoom@{{ config.LZJS_VERSION }}/dist/locuszoom.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.jsdelivr.net/npm/locuszoom@{{ config.LZJS_VERSION }}/dist/locuszoom.app.min.js" type="text/javascript"></script>
+
+<script type="text/javascript" src="{{ url_for('.static', filename='assocsingle.js') }}"></script>
+
+<style type="text/css">
+#lz_plot_container { min-width: 700px; }
+#lz_plot_container .lz-data_layer-tooltip { max-width: 400px; }
+</style>
+{% endblock %}
+
+
+{% block contained %}
+<div class="row">
+    <div class="col-xs-12">
+        <h1 style="margin-top:0">{{genename}} + {{phecode}} ({{phenostring }})</h1>
+        <p>
+          <a href="/gene/{{ genename }}" class="btn btn-primary">Go to gene {{ genename }}</a>
+          <a href="/pheno/{{ phecode }}" class="btn btn-primary">Go to pheno {{ phecode }}</a>
+        </p>
+        <p>pval: <b>{{ pval }}</b></p>
+        <p>Number of Rare Variants: <b>{{ num_rare }}</b></p>
+        <p>Chrom : Start - End: <b>{{chrom}} : {{"{:,}".format(startpos)}} - {{"{:,}".format(endpos)}}</b></p>
+        <p>Minor Allele Count in Cases / Controls: <b>{{mac_case}}</b> / <b>{{mac_control}}</b></p>
+        <p>Number of Cases / Controls: <b>{{ num_cases }}</b> / <b>{{num_controls}}</b></p>
+    </div>
+</div>
+<div class="row">
+    <div class="col-xs-12">
+        <div id="lz_plot_container"></div>
+        <div id="table" class="table-striped table-bordered"></div>
+    </div>
+</div>
+{% endblock %}

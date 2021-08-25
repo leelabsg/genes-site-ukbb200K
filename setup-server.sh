@@ -36,7 +36,7 @@ cd "$(dirname "$(_readlinkf "${BASH_SOURCE[0]}")")" # `cd` to the directory hold
 
 # Install dependencies
 if ! [ -e venv ]; then
-    #sudo apt update && sudo apt install python3-pip python3-venv nginx
+    sudo apt update && sudo apt install python3-pip python3-venv nginx
     python3 -m venv venv
     ./venv/bin/pip3 install -r requirements.txt
 fi
@@ -51,7 +51,7 @@ After=network.target
 User=nobody
 Group=nogroup
 WorkingDirectory=$PWD/genes-site/
-ExecStart=$PWD/venv/bin/gunicorn -k gevent -w4 --bind localhost:8896 serve:app
+ExecStart=$PWD/venv/bin/gunicorn -k gevent -w4 --bind localhost:8800 serve:app
 [Install]
 WantedBy=multi-user.target
 END
@@ -68,7 +68,7 @@ server {
     server_name ukb-200kexome.leelabsg.org;
     location / {
         include proxy_params;
-        proxy_pass http://localhost:8896;
+        proxy_pass http://localhost:8800;
     }
 }
 END
@@ -79,5 +79,8 @@ fi
 
 # Restart gunicorn to apply any changes
 sudo systemctl restart gunicorn-genes-site-ukbb200K
+
+# https cert
+# sudo certbot --nginx -d ukb-200kexome.leelabsg.org
 
 echo SUCCESS

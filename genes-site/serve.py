@@ -94,14 +94,37 @@ def assoc_page(genename, phecode):
 @app.route('/api/assocgroup/<associd>')
 def assocgroup_api(associd):
     df = get_df('SELECT description, pval, mac, rarevariants, ultra_rarevariants, pval_collapsed_ultrarare  FROM assoc_group WHERE assoc_id=?', (associd,))
+    
+    # added by SLEE for data quality
+    # change none to 9 (missing)
+    list = df['pval_collapsed_ultrarare']
+    list1 = [9 if v is None else v for v in list]
+    df['pval_collapsed_ultrarare'] = list1
+    # 
     return jsonify(dict(assocgroup=df))
 
 #added by WZ to have a seperate page for association rsuults by annotations
-@app.route('/assocgroup/<associd>')
-def assocgroup_page(associd):
-    matches = list(get_db().execute('SELECT description, pval, mac, rarevariants, ultra_rarevariants, pval_collapsed_ultrarare  FROM assoc_group WHERE assoc_id=?', (associd,)))
+@app.route('/assocsingle/<genename>/<phecode>')
+def assocsingle_page(genename, phecode):
+    matches = list(get_db().execute('SELECT id,phenostring,category,num_cases,num_controls FROM pheno WHERE phecode=?', (phecode,)))
     if not matches: return abort(404)
-    return render_template('assocgroup.html', associd = associd)
+    pheno_id, phenostring, category, num_cases, num_controls = matches[0]
+    sample_size = get_samplesize(num_cases,num_controls)
+    
+    matches = list(get_db().execute('SELECT id,chrom FROM gene WHERE name = ?', (genename,)))
+    if not matches: return abort(404)
+    gene_id,chrom = matches[0]
+
+    matches = list(get_db().execute('SELECT pval,num_rare, startpos,endpos, assoc.id FROM assoc '
+                                    'LEFT JOIN gene ON assoc.gene_id=gene.id '
+                                    'WHERE pheno_id=? AND gene_id=?', (pheno_id, gene_id)))
+    if not matches: return abort(404)
+    m = matches[0]
+    return render_template('assocsingle.html',
+                           phecode=phecode, phenostring=phenostring, category=category, num_cases=num_cases, num_controls=num_controls,
+                           sample_size=sample_size,
+                           genename=genename,
+                           pval=m[0],num_rare=m[1], chrom=chrom,startpos=m[2],endpos=m[3], associd =m[4])
 
 @app.route('/download/pheno/<phecode>')
 def download_pheno(phecode):
@@ -185,6 +208,11 @@ def variants_api(genename, phecode):
     variant_fetcher = getattr(g, '_variant_fetcher', None)
     if variant_fetcher is None: variant_fetcher = g._variant_fetcher = VariantFetcher()
     x = variant_fetcher.get(phecode, genename)
+    # SLEE added
+    df1 = x['df']
+    list1 = [  "%d" % (mac1) if mac1==mac2 else "%d:%d" % (mac1, mac2) for mac1, mac2 in zip(df1['mac_case'], df1['mac_control'])]
+    x['df']['mac'] = list1
+    # MAC
     return jsonify(x)
 class VariantFetcher:
     def __init__(self):
@@ -194,7 +222,7 @@ class VariantFetcher:
         self.zstd_decompressor = zstandard.ZstdDecompressor(dict_data=zstandard.ZstdCompressionDict(zstd_dict))
     def get(self, phecode, genename):
         matches = list(self.db.execute('SELECT phecode,genename,chrom,df FROM variant_df WHERE phecode=? AND genename=?', (phecode,genename)))
-        if len(matches) != 1: raise Exception('VariantFetcher got {} matches: {}'.format(len(matches), repr(matches)))
+        #if len(matches) != 1: raise Exception('VariantFetcher got {} matches: {}'.format(len(matches), repr(matches)))
         m = matches[0]
         decompressed = self.zstd_decompressor.decompress(m['df'])
         #df = json.loads(decompressed)
